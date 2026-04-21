@@ -1,0 +1,22 @@
+{
+  "name": "aimin-skill",
+  "version": "0.1.0",
+  "description": "Install aimin-skill commands and skill bundle into Claude Code and Codex",
+  "type": "module",
+  "bin": {
+    "aimin-skill": "./bin/aimin-skill.js"
+  },
+  "scripts": {
+    "test": "node test/install.test.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "skills",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

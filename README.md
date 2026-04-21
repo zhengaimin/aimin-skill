@@ -1,85 +1,79 @@
 # aimin-skill
 
-> Vue 项目开发规范 Skill，用于 AI 辅助代码生成
+本地 npm CLI 包，用来把 Aimin 的命令与 skill 同时注入到 Claude Code 和 Codex。
 
-## 项目类型
+## 快速开始
 
-| 类型   | 说明                 | 规则文件               |
-| ------ | -------------------- | ---------------------- |
-| admin  | 后台管理系统         | `admin/rules.md`       |
-| tauri  | Tauri 桌面应用       | `tauri/rules.md`       |
-| uni    | UniApp 跨平台应用    | `uni/rules.md`         |
-| web    | 纯前端项目           | 基础规则               |
+在仓库根目录执行本地安装：
+
+```bash
+npm install -g .
+```
+
+安装完成后执行注入：
+
+```bash
+aimin-skill init
+```
+
+检查安装状态：
+
+```bash
+aimin-skill doctor
+```
+
+## 注入结果
+
+执行 `aimin-skill init` 后，会把同一套内容安装到以下目录：
+
+- `~/.claude/commands/`
+- `~/.claude/skills/aimin-skill/`
+- `~/.codex/commands/`
+- `~/.codex/skills/aimin-skill/`
+
+当前会生成两个显式命令：
+
+- `/aimin-init`：按 Aimin 规范初始化当前项目的 `.agent/` 目录
+- `/aimin-api`：按 Aimin 规范新增接口、类型与枚举
 
 ## 目录结构
 
 ```text
+bin/
+└── aimin-skill.js         # CLI 入口
+src/cli/
+├── index.js               # 命令解析
+├── install.js             # 安装与注入逻辑
+├── doctor.js              # 安装状态诊断
+├── templates.js           # 命令模板生成
+├── constants.js           # 稳定常量
+└── utils.js               # 文件系统工具
 skills/
-├── naming.md              # 命名规范（通用）
-├── api.md                 # 接口与类型规范
-├── constant.md            # 常量与枚举规范
-├── vue.md                 # Vue 组件规范
-├── unocss.md              # UnoCSS 样式规范
-├── command/               # 命令详细说明
-│   ├── init.md            # --init 初始化
-│   └── api.md             # --api 新增接口
-├── admin/                 # 后台管理专用规则
-│   ├── rules.md           # 总规则
-│   ├── table.md           # 表格 CRUD 页面模板
-│   └── modal.md           # 弹窗模板
-├── tauri/                 # Tauri 专用规则
-│   └── rules.md           # IPC 命令、窗口管理
-├── uni/                   # UniApp 专用规则
-│   └── rules.md           # 生命周期、条件编译
-└── index/                 # 索引文件
-    └── constants.json     # 常量索引（空模板）
+├── SKILL.md               # Claude Code / Codex skill 入口
+├── README.md              # 规则总览
+├── command/
+│   ├── init.md            # 初始化说明
+│   └── api.md             # 接口说明
+├── admin/                 # admin 专用规则
+├── tauri/                 # tauri 专用规则
+├── uni/                   # uni 专用规则
+└── ...                    # 通用命名、接口、常量、样式规范
+test/
+└── install.test.js        # 逻辑性测试
 ```
 
----
+## 设计说明
+
+- 当前只做本地 npm 包能力，不处理公开 npm 发布
+- 安装触发采用显式 `aimin-skill init`，不做 `postinstall` 自动写用户目录
+- 默认注入用户级目录，不做项目级 `.claude` / `.codex` 模式
+- `--force` 只清理旧的受管文件，不会覆盖同名用户自定义命令
 
 ## 命令
 
-| 命令     | 说明         | 详细文档                  |
-| -------- | ------------ | ------------------------- |
-| `--init` | 初始化项目   | `command/init.md`         |
-| `--api`  | 新增接口     | `command/api.md`          |
-
----
-
-## 项目约束（强制）
-
-- **不要过度封装**：优先保持实现直接、可读
-- **命名简单化**：优先短而清晰的命名，避免冗长命名链
-- **禁止无语义缩写**：如 `a1`、`tmp2`、`xx`
-- **常见缩写需注释**：`cfg`、`ctx`、`ref` 等需补中文注释
-
----
-
-## 使用方式
-
-### 1. 初始化项目
-
-将 `skills/` 目录复制到目标项目的 `.agent/` 目录：
-
 ```bash
-cp -r skills/* D:\Code\你的项目\.agent\
+aimin-skill init [--user] [--force]
+aimin-skill doctor [--user]
 ```
 
-### 2. 更新 CLAUDE.md
-
-在项目根目录 `CLAUDE.md` 中添加：
-
-```markdown
-请先阅读 .agent/README.md 了解开发规范。
-```
-
----
-
-## admin 页面开发
-
-| 场景         | 文件结构                                              |
-| ------------ | ----------------------------------------------------- |
-| 表格 + 弹窗  | `index.vue` + `modal/{Entity}.vue` + `modal/Detail.vue` |
-| 页面局部类型 | `types.ts`（可选）                                    |
-| 页面局部常量 | `constants.ts`（仅复用型枚举/映射）                   |
-| 工具函数     | `utils/payload.ts`（提交字段 > 3 个时）               |
+`--user` 目前是默认模式，占位保留给后续扩展。
