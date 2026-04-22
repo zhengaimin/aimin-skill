@@ -4,7 +4,8 @@
  */
 
 export const PACKAGE_NAME = 'aimin-skill';
-export const SKILL_NAME = 'aimin-skill';
+export const MARKETPLACE_NAME = 'aimin-skill';
+export const PLUGIN_NAME = 'am';
 export const MANIFEST_FILE_NAME = '.aimin-skill-manifest.json';
 export const MANIFEST_VERSION = 1;
 export const MANAGED_MARKER = 'Managed by aimin-skill';
@@ -13,32 +14,40 @@ export const TOOL_DEFINITIONS = [
   {
     key: 'claude',
     label: 'Claude Code',
-    rootDirName: '.claude'
+    rootDirName: '.claude',
+    cliCommand: 'claude'
   },
   {
     key: 'codex',
     label: 'Codex',
-    rootDirName: '.codex'
+    rootDirName: '.codex',
+    cliCommand: 'codex'
   }
 ];
 
 export const COMMAND_DEFINITIONS = [
   {
     key: 'init',
-    fileName: 'aimin-init.md',
-    slashCommand: '/aimin-init',
-    title: 'Aimin Init',
-    description: '按 aimin-skill 规范初始化当前项目的 .agent 目录',
+    slashCommand: '/am:init',
+    title: 'AM 初始化',
+    description: '按 aimin-skill 规范初始化当前项目的 AGENTS.md、CLAUDE.md 与 .agent 目录',
     argumentHint: '[project-notes]',
-    example: '/aimin-init Vue3 admin 项目，使用 Element Plus + UnoCSS'
+    example: '/am:init Vue3 admin 项目，使用 Element Plus + UnoCSS'
   },
   {
     key: 'api',
-    fileName: 'aimin-api.md',
-    slashCommand: '/aimin-api',
-    title: 'Aimin API',
+    slashCommand: '/am:api',
+    title: 'AM 接口',
     description: '按 aimin-skill 规范新增接口、类型与枚举',
     argumentHint: '[api-notes]',
-    example: '/aimin-api 设备分组列表查询接口，包含状态枚举'
+    example: '/am:api 设备分组列表查询接口，包含状态枚举'
+  },
+  {
+    key: 'plan',
+    slashCommand: '/am:plan',
+    title: 'AM 计划',
+    description: '输出 AI SOP 计划，优先同步线上代码并处理冲突，仅在手动调用 /am:plan 时触发',
+    argumentHint: '[task-notes]',
+    example: '/am:plan 为设备管理页新增批量分组能力，先输出实施 SOP'
   }
 ];

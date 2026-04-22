@@ -1,25 +1,31 @@
 ---
 name: aimin-skill
-description: 用于在 Vue、Admin、Tauri、Uni 项目中按 Aimin 规范初始化 .agent 目录、加载规则并新增接口
+description: 用于在 Vue、Admin、Tauri、Uni 项目中按 Aimin 规范初始化 AGENTS.md、CLAUDE.md 与 .agent 目录、加载规则并新增接口
 ---
 
 # Aimin Skill
 
 ## Use When
 
-- 用户明确提到 `aimin-skill`、`aimin-init`、`aimin-api`
-- 需要初始化项目内的 `.agent/` 规范目录
+- 用户明确提到 `aimin-skill`、`am:init`、`am:api`、`am:plan`
+- 需要初始化项目内的 `AGENTS.md`、`CLAUDE.md` 与 `.agent/` 规范目录
 - 需要按 Aimin 规范新增接口、类型、常量或项目类型规则
 
 ## Workflow
 
 1. 先读 `README.md` 了解当前 skill 包结构
-2. 如果任务是初始化项目，读 `command/init.md`
-3. 如果任务是新增接口，读 `command/api.md`
+2. 如果任务是初始化项目，优先读 `project/README.md`、`project/AGENTS.md`、`project/CLAUDE.md`、`project/scripts/lint.md`
+3. 如果任务是新增接口，优先读项目侧 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/index/constants.json`、`.agent/index/utils.json`；缺失时再回退到安装包内的 `api.md`、`constant.md`、`naming.md`
 4. 仅在命中对应场景时按需加载：
    - `naming.md`
    - `constant.md`
    - `api.md`
+   - `index/constants.json`
+   - `index/utils.json`
+   - `project/README.md`
+   - `project/AGENTS.md`
+   - `project/CLAUDE.md`
+   - `project/scripts/lint.md`
    - `vue.md`
    - `unocss.md`
    - `admin/rules.md`
@@ -28,6 +34,7 @@ description: 用于在 Vue、Admin、Tauri、Uni 项目中按 Aimin 规范初始
    - `tauri/rules.md`
    - `uni/rules.md`
 5. 先检查当前项目代码与目录，再判断项目类型和技术栈
+6. 根目录 `AGENTS.md` 与 `CLAUDE.md` 必须保持渐进式披露：默认只放入口与路由表，详细规范下沉到 `.agent/**`
 
 ## Constraints
 

@@ -7,10 +7,13 @@
     "aimin-skill": "./bin/aimin-skill.js"
   },
   "scripts": {
+    "lint": "node scripts/lint.mjs",
     "test": "node test/install.test.js"
   },
   "files": [
     "bin",
+    "commands",
+    "scripts",
     "src",
     "skills",
     "README.md"

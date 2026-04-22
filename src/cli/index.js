@@ -65,30 +65,19 @@ export async function runCli(options) {
 async function runInitCommand(options) {
   const parsed = parseSubcommandOptions(options.argv, options.cwd);
   const result = await initUserInstall({
+    env: options.env,
     homeDir: parsed.homeDir,
     repoRoot: options.repoRoot,
     force: parsed.force
   });
 
   writeLine(options.stdout, `安装完成: ${result.packageMeta.name}@${result.packageMeta.version}`);
+  writeLine(options.stdout, `marketplace: ${result.marketplaceRoot}`);
+  writeLine(options.stdout, `plugin: ${result.pluginRoot}`);
   for (const item of result.results) {
-    writeLine(options.stdout, `- ${item.tool.label}: ${item.skillDir}`);
-    writeLine(
-      options.stdout,
-      `  commands: ${item.commandPlans.map(commandPlan => commandPlan.slashCommand).join(', ')}`
-    );
-
-    if (item.cleanupResult.removedSkillFiles.length > 0)
-      writeLine(
-        options.stdout,
-        `  removed skill files: ${item.cleanupResult.removedSkillFiles.join(', ')}`
-      );
-
-    if (item.cleanupResult.removedCommandFiles.length > 0)
-      writeLine(
-        options.stdout,
-        `  removed command files: ${item.cleanupResult.removedCommandFiles.join(', ')}`
-      );
+    writeLine(options.stdout, `- ${item.tool.label}: ${item.marketplaceStatus}`);
+    writeLine(options.stdout, `  plugin: ${item.pluginStatus}`);
+    writeLine(options.stdout, `  commands: /am:init, /am:api, /am:plan`);
   }
 
   return 0;
@@ -110,15 +99,19 @@ async function runDoctorCommand(options) {
     repoRoot: options.repoRoot
   });
 
-  writeLine(options.stdout, `source skill: ${report.sourceSkillDir}`);
+  writeLine(options.stdout, `source commands: ${report.commandSourceDir}`);
+  writeLine(options.stdout, `marketplace: ${report.marketplaceRoot}`);
+  writeLine(options.stdout, `plugin: ${report.pluginRoot}`);
   for (const toolReport of report.tools) {
     writeLine(options.stdout, `[${toolReport.status}] ${toolReport.tool.label}`);
-    writeLine(options.stdout, `skill: ${toolReport.skillStatus} -> ${toolReport.skillDir}`);
+    writeLine(options.stdout, `bundle: ${toolReport.bundleStatus}`);
+    writeLine(options.stdout, `marketplace: ${toolReport.marketplaceRegistered ? 'ready' : 'missing'}`);
+    writeLine(options.stdout, `plugin: ${toolReport.pluginInstalled ? 'ready' : 'missing'}`);
 
     for (const commandReport of toolReport.commandReports)
       writeLine(
         options.stdout,
-        `command: ${commandReport.status} -> ${commandReport.slashCommand} (${commandReport.filePath})`
+        `command: ${commandReport.commandStatus}/${commandReport.skillStatus} -> ${commandReport.slashCommand} (${commandReport.commandFilePath})`
       );
   }
 
@@ -175,8 +168,8 @@ function getHelpText(version) {
   aimin-skill doctor [--user]
 
 说明:
-  init    将 aimin-skill 注入 ~/.claude 与 ~/.codex 的 commands/ 和 skills/
-  doctor  检查当前用户目录下的安装状态
+  init    生成本地 marketplace/plugin，并注册到 Claude Code 与 Codex
+  doctor  检查当前用户目录下的 marketplace/plugin 安装状态
 
 示例:
   aimin-skill init

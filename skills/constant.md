@@ -104,7 +104,7 @@ const options = ORDER_STATUS_OPTIONS;
 
 ## 10. 索引维护
 
-索引文件仅记录 `src/api/**` 产出的接口常量/枚举的：
+默认索引文件使用项目侧 `.agent/index/constants.json`，仅记录 `src/api/**` 产出的接口常量/枚举的：
 
 - 枚举名称、描述、值类型
 - 类型名称（`T` 前缀）
