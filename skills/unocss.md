@@ -1,6 +1,6 @@
 # UnoCSS 样式规范
 
-> 从 `.agent/admin/vue.md` 拆出，命中 UnoCSS/Tailwind 样式改动时按需加载。
+> 从 `.agent/vue.md` 拆出，命中 UnoCSS/Tailwind 样式改动时按需加载。
 
 **核心原则**：尽量使用 UnoCSS 自带的变量，例如 `h-full`、`p-4`、`rounded-lg`，如果无法实现，则使用 `h-[10px]` 这种任意值语法。
 

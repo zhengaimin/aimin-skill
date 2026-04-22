@@ -91,6 +91,17 @@ function onLoginSuccess() {}
 - **弹窗特例**：`acceptParams` 固定放在 `watch/watchEffect` 前。
 - **善于提取常量**：页面允许保留局部布局值、提示文案、轻量默认值、一次性表单初始值，复用型枚举/映射类常量再抽到 `constants.ts`。
 
+### 自动检查命令
+
+- 检查 `<script setup>` 顶层分组顺序与空行规则：
+
+```bash
+node .agent/script/check-vue-script-groups.mjs src/views/organizationChart/enterpriseSetup/addProcesses
+```
+
+- 支持直接传文件或目录，命中目录时会递归检查其中的 `.vue` 文件。
+- 规则范围：分组顺序、分组间必须 1 个空行、组内禁止空行。
+
 ### 推荐顺序
 
 1. **类型定义导入**（`import type`）

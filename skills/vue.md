@@ -212,7 +212,7 @@ const modelValue = defineModel<Record<string, any>>();
 
 ## UnoCSS 样式规范
 
-> 已拆分到 `.agent/admin/unocss.md`，命中 UnoCSS/Tailwind 样式改动时按需加载。
+> 已拆分到 `.agent/unocss.md`，命中 UnoCSS/Tailwind 样式改动时按需加载。
 
 ## 事件处理规范
 
@@ -891,10 +891,10 @@ function handleInputChange(event: Event) {
 
 ## Element Plus 组件使用规范
 
-> 已拆分到 `.agent/admin/element-plus.md`，命中 el-dialog 改动时按需加载。
+> 命中 el-dialog 改动时参考 `.agent/admin/modal.md` 弹窗模板。
 
 ## Vue 组件代码顺序
 
-Vue 组件代码顺序统一参考 `.agent/naming.md` 中的“代码顺序规范”。
+Vue 组件代码顺序统一参考 `.agent/naming.md` 中的"代码顺序规范"。
 
-本文不再重复维护明细，避免 `naming.md` 与 `admin/vue.md` 出现规范漂移。
+本文不再重复维护明细，避免 `naming.md` 与 `vue.md` 出现规范漂移。

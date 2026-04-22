@@ -17,7 +17,7 @@
 
 ## 任务 2：实现表格 + 弹窗页面
 
-- 目录与文件结构严格按 `.agent/admin/page-template.md`：落地 `index.vue`、`modal/{Entity}.vue`；查看场景必须额外提供 `modal/Detail.vue`。
+- 目录与文件结构严格按 `.agent/admin/table.md`：落地 `index.vue`、`modal/{Entity}.vue`；查看场景必须额外提供 `modal/Detail.vue`。
 - 详情/查看必须使用独立详情弹窗（`modal/Detail.vue`），不得复用新增/编辑弹窗。
 - 表格页使用 `ProTable` 与 `useManage`，并遵循接口封装与异常处理约束。
 - 弹窗内新增/编辑接口必须封装 `axios{HttpMethod}{Action}Api`，并在 `catch` 里 `console.error`。
@@ -32,7 +32,7 @@
 
 ## 详情弹窗模板（必须使用）
 
-> 详情弹窗文件固定为 `modal/Detail.vue`，用于展示“查看/详情”，仅展示不编辑。
+> 详情弹窗文件固定为 `modal/Detail.vue`，用于展示"查看/详情"，仅展示不编辑。
 > 详情接口走全局 loading，不在详情弹窗内使用 `v-loading`。
 
 ```vue
