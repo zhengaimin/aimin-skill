@@ -46,8 +46,28 @@ export const COMMAND_DEFINITIONS = [
     key: 'plan',
     slashCommand: '/am:plan',
     title: 'AM 计划',
-    description: '输出 AI SOP 计划，优先同步线上代码并处理冲突，仅在手动调用 /am:plan 时触发',
+    description: '输出 AI SOP 计划，聚焦当前项目代码与规则，仅在手动调用 /am:plan 时触发',
     argumentHint: '[task-notes]',
     example: '/am:plan 为设备管理页新增批量分组能力，先输出实施 SOP'
   }
+];
+
+export const CODEX_USER_SKILL_DEFINITIONS = [
+  {
+    key: 'am',
+    skillName: 'am',
+    label: '$am',
+    type: 'router',
+    description: 'Aimin Codex 路由技能，按上下文选择初始化、接口或计划流程',
+    example: '$am init 当前 Rust 项目，初始化 AGENTS.md + CLAUDE.md + .agent'
+  },
+  ...COMMAND_DEFINITIONS.map(command => ({
+    key: `am-${command.key}`,
+    skillName: `am-${command.key}`,
+    label: `$am-${command.key}`,
+    type: 'command',
+    commandKey: command.key,
+    description: command.description,
+    example: command.example.replace(command.slashCommand, `$am-${command.key}`)
+  }))
 ];

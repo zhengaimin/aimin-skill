@@ -6,7 +6,7 @@
 import os from 'node:os';
 import path from 'node:path';
 import { createDoctorReport } from './doctor.js';
-import { initUserInstall } from './install.js';
+import { initUserInstall } from './install/index.js';
 import { readPackageMeta } from './utils.js';
 
 /**
@@ -67,17 +67,23 @@ async function runInitCommand(options) {
   const result = await initUserInstall({
     env: options.env,
     homeDir: parsed.homeDir,
+    platform: process.platform,
     repoRoot: options.repoRoot,
     force: parsed.force
   });
 
   writeLine(options.stdout, `安装完成: ${result.packageMeta.name}@${result.packageMeta.version}`);
+  writeLine(options.stdout, `platform: ${result.platform}`);
   writeLine(options.stdout, `marketplace: ${result.marketplaceRoot}`);
   writeLine(options.stdout, `plugin: ${result.pluginRoot}`);
+  writeLine(options.stdout, `codex skills: ${result.codexUserSkillRoot}`);
   for (const item of result.results) {
     writeLine(options.stdout, `- ${item.tool.label}: ${item.marketplaceStatus}`);
     writeLine(options.stdout, `  plugin: ${item.pluginStatus}`);
-    writeLine(options.stdout, `  commands: /am:init, /am:api, /am:plan`);
+    if (item.tool.key === 'claude')
+      writeLine(options.stdout, '  commands: /am:init, /am:api, /am:plan');
+    else
+      writeLine(options.stdout, '  skills: $am, $am-init, $am-api, $am-plan');
   }
 
   return 0;
@@ -112,6 +118,12 @@ async function runDoctorCommand(options) {
       writeLine(
         options.stdout,
         `command: ${commandReport.commandStatus}/${commandReport.skillStatus} -> ${commandReport.slashCommand} (${commandReport.commandFilePath})`
+      );
+
+    for (const skillReport of toolReport.codexUserSkillReports ?? [])
+      writeLine(
+        options.stdout,
+        `skill: ${skillReport.skillStatus} -> ${skillReport.skillLabel} (${skillReport.skillFilePath})`
       );
   }
 

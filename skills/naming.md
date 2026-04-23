@@ -4,7 +4,7 @@
 
 - 开发者偏好更简洁的命名：优先短而明确，避免冗长命名链。
 - 简洁命名必须可读：禁止无语义缩写（如 `a1`、`tmp2`、`xx`）。
-- 若使用常见短名/缩写（如 `cfg`、`ctx`、`ref`、`prev`、`next`），必须在定义处补中文注释说明业务语义。
+- 常见短名/缩写的注释要求统一参考 `.agent/comment.md`。
 
 ---
 
@@ -84,8 +84,7 @@ function onLoginSuccess() {}
 - **handle 方法之间禁止空行**，保持连续编排。
 - **视图类型集中管理（强制）**：`src/views/**` 内页面级 TypeScript 类型统一放同级 `types.ts`；`.vue` 文件内禁止新增页面级 `type` / `interface` 声明。
 - **页面常量集中管理（强制）**：页面级常量仅在属于枚举/映射类复用配置时（如 `OPTIONS`、`STATUS`、`TYPE`、`ENUM`、`MAP` 及其 `I18N` / `CONFIGS`）统一放同级 `constants.ts`；布局尺寸、提示文案、轻量默认值、一次性表单初始值默认留在页面内；通用纯函数、payload 构建、格式化/转换方法统一放 `utils/`；不要新增 `config.ts`；页面入口仅保留编排逻辑与必要局部配置。
-- 变量/计算属性使用中文 `/** */` 注释。
-- 方法定义注释必须使用 JSDoc（`/** ... */`），方法体内注释统一使用中文 `//`。
+- 注释规范统一参考 `.agent/comment.md`。
 - **变量与方法强制分组**：变量按 `useXXX Hook 调用 -> ref/reactive -> computed`；方法按 `通用方法 -> axios*Api -> handle* -> on* 生命周期 -> watch/watchEffect`。
 - **分组空行规则（强制）**：分组之间保留一个空行；分组内部连续排列且禁止空行；禁止跨分组穿插声明。
 - **弹窗特例**：`acceptParams` 固定放在 `watch/watchEffect` 前。
@@ -115,11 +114,11 @@ node .agent/script/check-vue-script-groups.mjs src/views/organizationChart/enter
 9. **组件选项配置**（`defineOptions`）
 10. **ts 类型定义**（`type`、`interface`）
 11. **useXXX Hook 函数调用**（同区域内不换行）
-12. **ref、reactive 响应式数据**（同区域内不换行，每个变量需添加 `/** */` 注释）
-13. **computed 计算属性**（同区域内不换行，每个属性需添加 `/** */` 注释）
-14. **Methods 方法定义**（通用方法函数，同区域内不换行；定义注释使用 JSDoc，方法体内注释使用 `//`）
-15. **axios 接口请求函数**（与后端 API 交互的函数，同区域内不换行；定义注释使用 JSDoc，方法体内注释使用 `//`）
-16. **handle 事件处理函数**（用户交互事件处理，同区域内不换行；定义注释使用 JSDoc，方法体内注释使用 `//`）
+12. **ref、reactive 响应式数据**（同区域内不换行）
+13. **computed 计算属性**（同区域内不换行）
+14. **Methods 方法定义**（通用方法函数，同区域内不换行）
+15. **axios 接口请求函数**（与后端 API 交互的函数，同区域内不换行）
+16. **handle 事件处理函数**（用户交互事件处理，同区域内不换行）
 17. **acceptParams 接收参数方法**（弹窗组件必备，放在 watch 前）
 18. **生命周期钩子**（`onShow`、`onLoginSuccess`、`onLoginFail` 等，同区域内不换行）
 19. **watch 监听**（`watch` / `watchEffect`，同区域内不换行）

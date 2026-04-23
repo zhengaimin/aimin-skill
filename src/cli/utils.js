@@ -36,7 +36,15 @@ export async function ensureDir(dirPath) {
  */
 export async function readTextIfExists(filePath) {
   if (!await pathExists(filePath)) return null;
-  return fs.readFile(filePath, 'utf8');
+
+  try {
+    return await fs.readFile(filePath, 'utf8');
+  } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT')
+      return null;
+
+    throw error;
+  }
 }
 
 /**

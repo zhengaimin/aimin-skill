@@ -30,8 +30,12 @@ async function validateCommandGuides() {
   assertIncludes(initContent, 'CLAUDE.md', 'init 命令说明缺少 CLAUDE.md');
   assertIncludes(initContent, '.agent/index/constants.json', 'init 命令说明缺少 constants 索引');
   assertIncludes(initContent, '.agent/index/utils.json', 'init 命令说明缺少 utils 索引');
+  assertIncludes(initContent, '.agent/comment.md', 'init 命令说明缺少 comment 路由');
   assertIncludes(initContent, '.agent/scripts/lint.md', 'init 命令说明缺少 lint 路由');
+  assertIncludes(initContent, '对本次修改文件执行 lint 校验', 'init 命令说明缺少改动文件 lint 要求');
   assertIncludes(initContent, '/am:init', 'init 命令说明缺少 /am:init');
+  assertIncludes(initContent, '非 admin 项目，不要把 admin 专属检查写进 `.agent/scripts/lint.md`', 'init 命令说明缺少非 admin 限制');
+  assertIncludes(initContent, 'prettier/prettier', 'init 命令说明缺少 CRLF / prettier 提示');
 
   const apiContent = await readText(path.join(repoRoot, 'commands', 'api.md'));
   assertIncludes(apiContent, '/am:api', 'api 命令说明缺少 /am:api');
@@ -39,8 +43,11 @@ async function validateCommandGuides() {
   const planContent = await readText(path.join(repoRoot, 'commands', 'plan.md'));
   assertIncludes(planContent, '/am:plan', 'plan 命令说明缺少 /am:plan');
   assertIncludes(planContent, '手动触发', 'plan 命令说明缺少手动触发表述');
-  assertIncludes(planContent, '拉取线上最新代码', 'plan 命令说明缺少拉取线上代码要求');
-  assertIncludes(planContent, '解决冲突', 'plan 命令说明缺少冲突处理要求');
+  assertIncludes(planContent, '对本次修改文件执行 lint 校验', 'plan 命令说明缺少改动文件 lint 要求');
+  assertExcludes(planContent, 'git', 'plan 命令说明不应包含 git 内容');
+  assertExcludes(planContent, '远端', 'plan 命令说明不应包含远端同步内容');
+  assertExcludes(planContent, '分支', 'plan 命令说明不应包含分支内容');
+  assertExcludes(planContent, '冲突', 'plan 命令说明不应包含冲突处理内容');
   assertIncludes(planContent, '调研', 'plan 命令说明缺少调研阶段');
   assertIncludes(planContent, '拆任务', 'plan 命令说明缺少拆任务阶段');
   assertIncludes(planContent, '实施', 'plan 命令说明缺少实施阶段');
@@ -52,18 +59,25 @@ async function validateCommandGuides() {
 async function validateProjectTemplates() {
   const agentsContent = await readText(path.join(repoRoot, 'skills', 'project', 'AGENTS.md'));
   const claudeContent = await readText(path.join(repoRoot, 'skills', 'project', 'CLAUDE.md'));
+  const projectReadmeContent = await readText(path.join(repoRoot, 'skills', 'project', 'README.md'));
   const lintContent = await readText(path.join(repoRoot, 'skills', 'project', 'scripts', 'lint.md'));
 
   for (const content of [agentsContent, claudeContent]) {
     assertIncludes(content, '.agent/api.md', '渐进式模板缺少 api 路由');
     assertIncludes(content, '.agent/index/constants.json', '渐进式模板缺少 constants 路由');
     assertIncludes(content, '.agent/index/utils.json', '渐进式模板缺少 utils 路由');
+    assertIncludes(content, '.agent/comment.md', '渐进式模板缺少 comment 路由');
     assertIncludes(content, '.agent/scripts/lint.md', '渐进式模板缺少 lint 路由');
+    assertIncludes(content, '对本次修改文件做校验', '渐进式模板缺少改动文件 lint 要求');
   }
 
+  assertIncludes(projectReadmeContent, '.agent/comment.md', 'README 模板缺少 comment 路由');
+  assertIncludes(projectReadmeContent, '├── comment.md', 'README 模板缺少 comment 目录结构');
+  assertIncludes(lintContent, '.agent/comment.md', 'lint 模板缺少 comment 引用');
   assertIncludes(lintContent, '.agent/naming.md', 'lint 模板缺少 naming 引用');
-  assertIncludes(lintContent, 'admin', 'lint 模板缺少 admin 额外检查');
-  assertIncludes(lintContent, '未使用变量', 'lint 模板缺少未使用变量检查');
+  assertIncludes(lintContent, '对本次修改文件执行 lint 校验', 'lint 模板缺少改动文件 lint 要求');
+  assertExcludes(lintContent, 'admin 额外检查', 'lint 模板不应默认包含 admin 额外检查');
+  assertExcludes(lintContent, '未使用变量', 'lint 模板不应默认包含 admin 未使用变量检查');
 }
 
 async function validateJsonFiles() {
@@ -95,5 +109,10 @@ async function readJson(filePath) {
 
 function assertIncludes(content, keyword, message) {
   if (!content.includes(keyword))
+    errors.push(message);
+}
+
+function assertExcludes(content, keyword, message) {
+  if (content.includes(keyword))
     errors.push(message);
 }

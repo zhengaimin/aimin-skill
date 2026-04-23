@@ -4,8 +4,8 @@
  */
 
 import path from 'node:path';
-import { COMMAND_DEFINITIONS, MANIFEST_FILE_NAME, MARKETPLACE_NAME, PLUGIN_NAME } from './constants.js';
-import { buildInstallContext } from './install.js';
+import { CODEX_USER_SKILL_DEFINITIONS, COMMAND_DEFINITIONS, MANIFEST_FILE_NAME, MARKETPLACE_NAME, PLUGIN_NAME } from './constants.js';
+import { buildInstallContext } from './install/index.js';
 import { isManagedContent } from './templates.js';
 import { pathExists, readJsonIfExists, readTextIfExists } from './utils.js';
 
@@ -45,6 +45,7 @@ async function createToolReport(context, toolPlan) {
   const marketplaceRootExists = await pathExists(context.marketplaceRoot);
   const pluginRootExists = await pathExists(context.pluginRoot);
   const commandReports = [];
+  const codexUserSkillReports = [];
 
   for (const command of COMMAND_DEFINITIONS) {
     const commandFilePath = path.join(context.pluginRoot, 'commands', `${command.key}.md`);
@@ -86,8 +87,20 @@ async function createToolReport(context, toolPlan) {
       marketplaceRegistered,
       pluginInstalled,
       marketplaceSource: toolPlan.marketplaceSource,
-      commandReports
+      commandReports,
+      codexUserSkillReports
     };
+  }
+
+  for (const skillDefinition of CODEX_USER_SKILL_DEFINITIONS) {
+    const skillFilePath = path.join(toolPlan.toolRoot, 'skills', skillDefinition.skillName, 'SKILL.md');
+    const skillContent = await readTextIfExists(skillFilePath);
+
+    codexUserSkillReports.push({
+      skillLabel: skillDefinition.label,
+      skillFilePath,
+      skillStatus: getManagedFileStatus(skillContent)
+    });
   }
 
   const codexConfigText = await readTextIfExists(toolPlan.codexConfigPath);
@@ -97,6 +110,7 @@ async function createToolReport(context, toolPlan) {
     tool: toolPlan.tool,
     status: getToolStatus({
       commandReports,
+      codexUserSkillReports,
       marketplaceRegistered,
       manifestManaged,
       marketplaceRootExists,
@@ -105,6 +119,7 @@ async function createToolReport(context, toolPlan) {
     }),
     bundleStatus: getBundleStatus({
       commandReports,
+      codexUserSkillReports,
       manifestManaged,
       marketplaceRootExists,
       pluginRootExists
@@ -112,7 +127,8 @@ async function createToolReport(context, toolPlan) {
     marketplaceRegistered,
     pluginInstalled: marketplaceRegistered,
     marketplaceSource: toolPlan.marketplaceSource,
-    commandReports
+    commandReports,
+    codexUserSkillReports
   };
 }
 
@@ -131,19 +147,21 @@ function getManagedFileStatus(content) {
  * 获取 bundle 状态
  * @param {object} options 状态参数
  * @param {Array<{ commandStatus: string; skillStatus: string }>} options.commandReports 命令报告
+ * @param {Array<{ skillStatus: string }>} [options.codexUserSkillReports] Codex user skill 报告
  * @param {boolean} options.manifestManaged manifest 是否受管
  * @param {boolean} options.marketplaceRootExists marketplace 根目录是否存在
  * @param {boolean} options.pluginRootExists plugin 根目录是否存在
  * @returns {'missing' | 'ready' | 'partial' | 'conflict'}
  */
 function getBundleStatus(options) {
-  const { commandReports, manifestManaged, marketplaceRootExists, pluginRootExists } = options;
+  const { codexUserSkillReports = [], commandReports, manifestManaged, marketplaceRootExists, pluginRootExists } = options;
   const statuses = [
     marketplaceRootExists ? 'ready' : 'missing',
     pluginRootExists ? 'ready' : 'missing',
     manifestManaged ? 'ready' : 'missing',
     ...commandReports.map(commandReport => commandReport.commandStatus),
-    ...commandReports.map(commandReport => commandReport.skillStatus)
+    ...commandReports.map(commandReport => commandReport.skillStatus),
+    ...codexUserSkillReports.map(skillReport => skillReport.skillStatus)
   ];
 
   if (statuses.every(status => status === 'missing')) return 'missing';
@@ -156,6 +174,7 @@ function getBundleStatus(options) {
  * 获取工具总体状态
  * @param {object} options 状态参数
  * @param {Array<{ commandStatus: string; skillStatus: string }>} options.commandReports 命令报告
+ * @param {Array<{ skillStatus: string }>} [options.codexUserSkillReports] Codex user skill 报告
  * @param {boolean} options.marketplaceRegistered marketplace 是否已注册
  * @param {boolean} options.manifestManaged manifest 是否受管
  * @param {boolean} options.marketplaceRootExists marketplace 根目录是否存在
@@ -164,9 +183,18 @@ function getBundleStatus(options) {
  * @returns {'missing' | 'ready' | 'partial' | 'conflict'}
  */
 function getToolStatus(options) {
-  const { commandReports, marketplaceRegistered, manifestManaged, marketplaceRootExists, pluginInstalled, pluginRootExists } = options;
+  const {
+    codexUserSkillReports = [],
+    commandReports,
+    marketplaceRegistered,
+    manifestManaged,
+    marketplaceRootExists,
+    pluginInstalled,
+    pluginRootExists
+  } = options;
   const statuses = [
     getBundleStatus({
+      codexUserSkillReports,
       commandReports,
       manifestManaged,
       marketplaceRootExists,

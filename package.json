@@ -8,7 +8,16 @@
   },
   "scripts": {
     "lint": "node scripts/lint.mjs",
-    "test": "node test/install.test.js"
+    "test": "node test/install.test.js",
+    "install:init": "node scripts/local-dlx.mjs init",
+    "install:init:force": "node scripts/local-dlx.mjs init --force",
+    "install:doctor": "node scripts/local-dlx.mjs doctor",
+    "setup": "node scripts/local-dlx.mjs init",
+    "setup:force": "node scripts/local-dlx.mjs init --force",
+    "doctor": "node scripts/local-dlx.mjs doctor",
+    "local:init": "node scripts/local-dlx.mjs init",
+    "local:init:force": "node scripts/local-dlx.mjs init --force",
+    "local:doctor": "node scripts/local-dlx.mjs doctor"
   },
   "files": [
     "bin",
@@ -21,5 +30,6 @@
   "engines": {
     "node": ">=18"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be"
 }

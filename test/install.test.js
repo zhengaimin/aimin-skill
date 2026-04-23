@@ -10,7 +10,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { createDoctorReport } from '../src/cli/doctor.js';
-import { initUserInstall } from '../src/cli/install.js';
+import { initUserInstall } from '../src/cli/install/index.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -27,7 +27,8 @@ async function createTempHomeDir() {
  * @param {string} homeDir 临时 home 目录
  * @returns {Promise<NodeJS.ProcessEnv>}
  */
-async function createMockToolEnv(homeDir) {
+async function createMockToolEnv(homeDir, options = {}) {
+  const { claudeUpdateShouldFail = false } = options;
   const binDir = path.join(homeDir, 'bin');
   const claudePath = path.join(binDir, 'claude');
   const codexPath = path.join(binDir, 'codex');
@@ -56,6 +57,13 @@ EOF
 fi
 
 if [ "$1" = "plugin" ] && [ "$2" = "marketplace" ] && [ "$3" = "update" ]; then
+  ${claudeUpdateShouldFail ? 'echo "mock claude update failed" >&2\n  exit 1' : 'exit 0'}
+fi
+
+if [ "$1" = "plugin" ] && [ "$2" = "marketplace" ] && [ "$3" = "remove" ]; then
+  cat > "$HOME/.claude/plugins/known_marketplaces.json" <<EOF
+{}
+EOF
   exit 0
 fi
 
@@ -98,15 +106,8 @@ EOF
 fi
 
 if [ "$1" = "plugin" ] && [ "$2" = "marketplace" ] && [ "$3" = "upgrade" ]; then
-  if [ ! -f "$HOME/.codex/config.toml" ]; then
-    cat > "$HOME/.codex/config.toml" <<EOF
-[marketplaces.aimin-skill]
-last_updated = "2026-04-22T00:00:00Z"
-source_type = "local"
-source = "upgrade"
-EOF
-  fi
-  exit 0
+  echo "Error: marketplace \`aimin-skill\` is not configured as a Git marketplace" >&2
+  exit 1
 fi
 
 exit 0
@@ -145,9 +146,21 @@ test('init installs local marketplace bundle and registers both tools', async ()
     homeDir,
     '.aimin-skill-marketplace/plugins/am/skills/plan/SKILL.md'
   );
+  const codexRouterSkill = await readInstalledFile(
+    homeDir,
+    '.codex/skills/am/SKILL.md'
+  );
+  const codexInitSkill = await readInstalledFile(
+    homeDir,
+    '.codex/skills/am-init/SKILL.md'
+  );
   const projectAgentsTemplate = await readInstalledFile(
     homeDir,
     '.aimin-skill-marketplace/plugins/am/references/project/AGENTS.md'
+  );
+  const projectClaudeTemplate = await readInstalledFile(
+    homeDir,
+    '.aimin-skill-marketplace/plugins/am/references/project/CLAUDE.md'
   );
   const manifest = JSON.parse(
     await readInstalledFile(homeDir, '.aimin-skill-marketplace/.aimin-skill-manifest.json')
@@ -158,19 +171,57 @@ test('init installs local marketplace bundle and registers both tools', async ()
   const codexConfig = await readInstalledFile(homeDir, '.codex/config.toml');
 
   assert.match(initCommand, /Managed by aimin-skill/);
+  assert.match(initCommand, /^# \/am:init$/m);
   assert.match(initCommand, /\/am:init/);
   assert.match(initCommand, /## 执行要求/);
+  assert.match(initCommand, /\.gitignore/);
+  assert.match(initCommand, /# ai/);
+  assert.match(initCommand, /软链接/);
+  assert.match(initCommand, /ln -sfn/);
+  assert.match(initCommand, /\.agent\/README\.md` 不存在/);
+  assert.match(initCommand, /不能是普通文件/);
   assert.doesNotMatch(initCommand, /The user invoked this command/);
+  assert.doesNotMatch(initCommand, /项目 README 模板/);
   assert.match(planSkill, /name: plan/);
   assert.match(planSkill, /调研/);
-  assert.match(planSkill, /拉取线上最新代码/);
-  assert.match(planSkill, /解决冲突/);
+  assert.doesNotMatch(planSkill, /(git|远端|分支|冲突)/);
+  assert.match(codexRouterSkill, /name: am/);
+  assert.match(codexRouterSkill, /\$am-init/);
+  assert.match(codexInitSkill, /name: am-init/);
+  assert.match(codexInitSkill, /用户通过 `\$am-init` 主动调用本 skill/);
   assert.match(projectAgentsTemplate, /\.agent\/index\/constants\.json/);
+  assert.match(projectAgentsTemplate, /软链接/);
+  assert.match(projectAgentsTemplate, /\.agent\/README\.md/);
+  assert.match(projectClaudeTemplate, /\.agent\/README\.md/);
   assert.equal(manifest.marketplaceName, 'aimin-skill');
   assert.equal(manifest.pluginName, 'am');
+  assert.equal(manifest.platform, process.platform === 'win32' ? 'windows' : 'mac');
   assert.equal(manifest.toolResults.length, 2);
   assert.ok(claudeInstalled.plugins['am@aimin-skill']);
   assert.match(codexConfig, /\[marketplaces\.aimin-skill\]/);
+});
+
+test('init can dispatch to the windows installer explicitly', async () => {
+  const homeDir = await createTempHomeDir();
+  const env = await createMockToolEnv(homeDir);
+
+  await initUserInstall({
+    env,
+    homeDir,
+    platform: 'win32',
+    repoRoot
+  });
+
+  const manifest = JSON.parse(
+    await readInstalledFile(homeDir, '.aimin-skill-marketplace/.aimin-skill-manifest.json')
+  );
+  const initCommand = await readInstalledFile(
+    homeDir,
+    '.aimin-skill-marketplace/plugins/am/commands/init.md'
+  );
+
+  assert.equal(manifest.platform, 'windows');
+  assert.match(initCommand, /New-Item -ItemType SymbolicLink/);
 });
 
 test('init is idempotent and doctor reports ready after install', async () => {
@@ -185,11 +236,23 @@ test('init is idempotent and doctor reports ready after install', async () => {
   assert.ok(report.tools.every(toolReport => toolReport.bundleStatus === 'ready'));
   assert.ok(report.tools.every(toolReport => toolReport.commandReports.length === 3));
   assert.ok(
+    report.tools
+      .filter(toolReport => toolReport.tool.key === 'codex')
+      .every(toolReport => toolReport.codexUserSkillReports.length === 4)
+  );
+  assert.ok(
     report.tools.every(toolReport =>
       toolReport.commandReports.every(commandReport =>
         commandReport.commandStatus === 'ready' && commandReport.skillStatus === 'ready'
       )
     )
+  );
+  assert.ok(
+    report.tools
+      .filter(toolReport => toolReport.tool.key === 'codex')
+      .every(toolReport =>
+        toolReport.codexUserSkillReports.every(skillReport => skillReport.skillStatus === 'ready')
+      )
   );
 });
 
@@ -212,5 +275,19 @@ test('init --force rebuilds marketplace bundle and removes stale files', async (
   await assert.rejects(
     fs.readFile(staleFilePath, 'utf8'),
     /ENOENT/
+  );
+});
+
+test('init falls back to remove and add when Claude marketplace update fails', async () => {
+  const homeDir = await createTempHomeDir();
+  const initialEnv = await createMockToolEnv(homeDir);
+  await initUserInstall({ env: initialEnv, homeDir, repoRoot });
+
+  const fallbackEnv = await createMockToolEnv(homeDir, { claudeUpdateShouldFail: true });
+  const result = await initUserInstall({ env: fallbackEnv, homeDir, repoRoot });
+
+  assert.equal(
+    result.results.find(item => item.tool.key === 'claude')?.marketplaceStatus,
+    're-added'
   );
 });

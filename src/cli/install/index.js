@@ -1,12 +1,13 @@
 /**
  * aimin-skill 安装逻辑
- * 负责生成本地 marketplace/plugin，并注册到 Claude Code 与 Codex
+ * 负责生成本地 marketplace/plugin，并按平台注册到 Claude Code 与 Codex
  */
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import {
+  CODEX_USER_SKILL_DEFINITIONS,
   COMMAND_DEFINITIONS,
   MANIFEST_FILE_NAME,
   MANIFEST_VERSION,
@@ -14,8 +15,14 @@ import {
   PACKAGE_NAME,
   PLUGIN_NAME,
   TOOL_DEFINITIONS
-} from './constants.js';
-import { buildPluginCommandContent, buildPluginSkillContent } from './templates.js';
+} from '../constants.js';
+import {
+  buildCodexCommandSkillBody,
+  buildCodexRouterSkillBody,
+  buildCodexUserSkillContent,
+  buildPluginCommandContent,
+  buildPluginSkillContent
+} from '../templates.js';
 import {
   ensureDir,
   listRelativeFiles,
@@ -26,7 +33,9 @@ import {
   toPosixPath,
   writeJson,
   writeText
-} from './utils.js';
+} from '../utils.js';
+import { registerPlatformTool as registerMacPlatformTool } from './mac.js';
+import { registerPlatformTool as registerWindowsPlatformTool } from './windows.js';
 
 /**
  * 构建安装上下文
@@ -47,6 +56,7 @@ export async function buildInstallContext(options) {
 
   const sourceSkillFiles = await listRelativeFiles(sourceSkillDir);
   const commandGuideMap = await readCommandGuideMap(sourceCommandDir);
+  const codexUserSkillRoot = path.join(homeDir, '.codex', 'skills');
   const marketplaceRoot = path.join(homeDir, `.${PACKAGE_NAME}-marketplace`);
   const pluginRoot = path.join(marketplaceRoot, 'plugins', PLUGIN_NAME);
   const referenceDir = path.join(pluginRoot, 'references');
@@ -59,6 +69,7 @@ export async function buildInstallContext(options) {
 
   return {
     commandGuideMap,
+    codexUserSkillRoot,
     manifestPath,
     marketplaceRoot,
     packageMeta,
@@ -77,37 +88,72 @@ export async function buildInstallContext(options) {
  * @param {boolean} [options.force] 是否强制重建 marketplace
  * @param {string} options.homeDir 用户目录
  * @param {string} options.repoRoot 仓库根目录
+ * @param {NodeJS.Platform} [options.platform] 运行平台
  * @returns {Promise<object>}
  */
 export async function initUserInstall(options) {
-  const { env = process.env, force = false } = options;
+  const { env = process.env, force = false, platform = process.platform } = options;
   const context = await buildInstallContext(options);
+  const platformToolInstaller = getPlatformToolInstaller(platform);
+  const platformKey = normalizePlatformKey(platform);
 
   if (force && await pathExists(context.marketplaceRoot))
     await fs.rm(context.marketplaceRoot, { recursive: true, force: true });
 
-  await writeManagedMarketplace(context);
+  if (force)
+    await removeManagedCodexUserSkills(context);
+
+  await writeManagedMarketplace(context, platformKey);
+  await writeManagedCodexUserSkills(context, platformKey);
 
   const results = [];
-  for (const toolPlan of context.toolPlans)
-    results.push(await registerTool({
+  for (const toolPlan of context.toolPlans) {
+    results.push(await platformToolInstaller({
       env,
+      helpers: {
+        readJsonIfExists,
+        readTextIfExists,
+        runToolCommand
+      },
       homeDir: options.homeDir,
-      marketplaceRoot: context.marketplaceRoot,
       toolPlan
     }));
+  }
 
   await writeManagedManifest({
     context,
+    platform,
     results
   });
 
   return {
     packageMeta: context.packageMeta,
+    codexUserSkillRoot: context.codexUserSkillRoot,
     marketplaceRoot: context.marketplaceRoot,
+    platform: platformKey,
     pluginRoot: context.pluginRoot,
     results
   };
+}
+
+/**
+ * 根据平台选择安装执行器
+ * @param {NodeJS.Platform} platform 运行平台
+ * @returns {(options: object) => Promise<object>}
+ */
+function getPlatformToolInstaller(platform) {
+  if (platform === 'win32') return registerWindowsPlatformTool;
+  return registerMacPlatformTool;
+}
+
+/**
+ * 归一化平台名称
+ * @param {NodeJS.Platform} platform 运行平台
+ * @returns {'mac' | 'windows'}
+ */
+function normalizePlatformKey(platform) {
+  if (platform === 'win32') return 'windows';
+  return 'mac';
 }
 
 /**
@@ -147,7 +193,7 @@ function createToolPlan(options) {
  * @param {object} context 安装上下文
  * @returns {Promise<void>}
  */
-async function writeManagedMarketplace(context) {
+async function writeManagedMarketplace(context, platform) {
   await ensureDir(context.referenceDir);
 
   for (const relativePath of context.sourceSkillFiles) {
@@ -163,6 +209,7 @@ async function writeManagedMarketplace(context) {
       command,
       commandGuide: context.commandGuideMap[command.key],
       packageVersion: context.packageMeta.version,
+      platform,
       referenceDir: context.referenceDir
     };
 
@@ -194,103 +241,59 @@ async function writeManagedMarketplace(context) {
 }
 
 /**
- * 注册工具
- * @param {object} options 注册参数
- * @param {NodeJS.ProcessEnv} options.env 环境变量
- * @param {string} options.homeDir 用户目录
- * @param {string} options.marketplaceRoot marketplace 根目录
- * @param {object} options.toolPlan 工具计划
- * @returns {Promise<object>}
+ * 写入受管的 Codex user skills
+ * @param {object} context 安装上下文
+ * @returns {Promise<void>}
  */
-async function registerTool(options) {
-  const { toolPlan } = options;
+async function writeManagedCodexUserSkills(context, platform) {
+  for (const skillDefinition of CODEX_USER_SKILL_DEFINITIONS) {
+    const skillDir = path.join(context.codexUserSkillRoot, skillDefinition.skillName);
+    const skillPath = path.join(skillDir, 'SKILL.md');
+    const body = skillDefinition.type === 'router'
+      ? buildCodexRouterSkillBody({
+        commandGuideMap: context.commandGuideMap,
+        referenceDir: context.referenceDir
+      })
+      : buildCodexCommandSkillBody({
+        command: COMMAND_DEFINITIONS.find(command => command.key === skillDefinition.commandKey),
+        commandGuide: context.commandGuideMap[skillDefinition.commandKey],
+        entryLabel: skillDefinition.label,
+        platform,
+        referenceDir: context.referenceDir
+      });
 
-  if (toolPlan.tool.key === 'claude')
-    return registerClaudeTool(options);
-
-  return registerCodexTool(options);
+    await writeText(
+      skillPath,
+      buildCodexUserSkillContent({
+        body,
+        description: skillDefinition.description,
+        packageVersion: context.packageMeta.version,
+        skillName: skillDefinition.skillName
+      })
+    );
+  }
 }
 
 /**
- * 注册 Claude Code
- * @param {object} options 注册参数
- * @param {NodeJS.ProcessEnv} options.env 环境变量
- * @param {string} options.homeDir 用户目录
- * @param {object} options.toolPlan 工具计划
- * @returns {Promise<object>}
+ * 删除受管的 Codex user skills
+ * @param {object} context 安装上下文
+ * @returns {Promise<void>}
  */
-async function registerClaudeTool(options) {
-  const { env, homeDir, toolPlan } = options;
-  const marketplaceExists = await isClaudeMarketplaceRegistered(toolPlan.knownMarketplacesPath);
-
-  if (marketplaceExists) {
-    await runToolCommand(toolPlan.cliCommand, ['plugin', 'marketplace', 'update', MARKETPLACE_NAME], {
-      env,
-      homeDir
-    });
-  } else {
-    await runToolCommand(toolPlan.cliCommand, ['plugin', 'marketplace', 'add', toolPlan.marketplaceSource, '--scope', 'user'], {
-      env,
-      homeDir
-    });
-  }
-
-  await runToolCommand(toolPlan.cliCommand, ['plugin', 'install', `${PLUGIN_NAME}@${MARKETPLACE_NAME}`, '--scope', 'user'], {
-    env,
-    homeDir
-  });
-
-  return {
-    tool: toolPlan.tool,
-    marketplaceStatus: marketplaceExists ? 'updated' : 'added',
-    marketplaceSource: toolPlan.marketplaceSource,
-    pluginStatus: await isClaudePluginInstalled(toolPlan.installedPluginsPath) ? 'ready' : 'partial',
-    status: 'ready'
-  };
-}
-
-/**
- * 注册 Codex
- * @param {object} options 注册参数
- * @param {NodeJS.ProcessEnv} options.env 环境变量
- * @param {string} options.homeDir 用户目录
- * @param {object} options.toolPlan 工具计划
- * @returns {Promise<object>}
- */
-async function registerCodexTool(options) {
-  const { env, homeDir, toolPlan } = options;
-  const marketplaceExists = await isCodexMarketplaceRegistered(toolPlan.codexConfigPath);
-
-  if (marketplaceExists) {
-    await runToolCommand(toolPlan.cliCommand, ['plugin', 'marketplace', 'upgrade', MARKETPLACE_NAME], {
-      env,
-      homeDir
-    });
-  } else {
-    await runToolCommand(toolPlan.cliCommand, ['plugin', 'marketplace', 'add', toolPlan.marketplaceSource], {
-      env,
-      homeDir
-    });
-  }
-
-  return {
-    tool: toolPlan.tool,
-    marketplaceStatus: marketplaceExists ? 'updated' : 'added',
-    marketplaceSource: toolPlan.marketplaceSource,
-    pluginStatus: 'managed_by_marketplace',
-    status: 'ready'
-  };
+async function removeManagedCodexUserSkills(context) {
+  for (const skillDefinition of CODEX_USER_SKILL_DEFINITIONS)
+    await fs.rm(path.join(context.codexUserSkillRoot, skillDefinition.skillName), { recursive: true, force: true });
 }
 
 /**
  * 写入受管 manifest
  * @param {object} options 写入参数
  * @param {object} options.context 安装上下文
+ * @param {'mac' | 'windows' | NodeJS.Platform} options.platform 当前平台
  * @param {object[]} options.results 注册结果
  * @returns {Promise<void>}
  */
 async function writeManagedManifest(options) {
-  const { context, results } = options;
+  const { context, platform, results } = options;
 
   await writeJson(context.manifestPath, {
     manifestVersion: MANIFEST_VERSION,
@@ -298,17 +301,20 @@ async function writeManagedManifest(options) {
     marketplaceName: MARKETPLACE_NAME,
     packageName: context.packageMeta.name,
     packageVersion: context.packageMeta.version,
+    platform: normalizePlatformKey(platform),
     pluginName: PLUGIN_NAME,
     installedAt: new Date().toISOString(),
     marketplaceRoot: toPosixPath(context.marketplaceRoot),
     pluginRoot: toPosixPath(context.pluginRoot),
     referenceDir: toPosixPath(context.referenceDir),
     commands: COMMAND_DEFINITIONS.map(command => command.key),
+    codexUserSkills: CODEX_USER_SKILL_DEFINITIONS.map(skillDefinition => skillDefinition.skillName),
     toolResults: results.map(result => ({
       tool: result.tool.key,
       status: result.status,
       marketplaceStatus: result.marketplaceStatus,
-      pluginStatus: result.pluginStatus
+      pluginStatus: result.pluginStatus,
+      userSkillStatus: result.userSkillStatus ?? null
     }))
   });
 }
@@ -405,48 +411,17 @@ function buildCodexPluginManifest(version) {
     interface: {
       displayName: 'Aimin Skill',
       shortDescription: 'Aimin 命令插件',
-      longDescription: '提供 /am:init、/am:api、/am:plan 三个命令。',
+      longDescription: '提供 Aimin 项目规范参考，并配合 $am、$am-init、$am-api、$am-plan 使用。',
       developerName: 'Aimin',
       category: 'Productivity',
       capabilities: ['Interactive', 'Write'],
       defaultPrompt: [
-        '用 /am:init 初始化项目规则。',
-        '用 /am:api 新增接口。',
-        '用 /am:plan 同步线上代码、处理冲突并输出 SOP。'
+        '用 $am-init 初始化项目规则。',
+        '用 $am-api 新增接口。',
+        '用 $am-plan 梳理当前项目并输出 SOP。'
       ]
     }
   };
-}
-
-/**
- * 判断 Claude marketplace 是否已注册
- * @param {string} filePath known_marketplaces.json 路径
- * @returns {Promise<boolean>}
- */
-async function isClaudeMarketplaceRegistered(filePath) {
-  const marketplaces = await readJsonIfExists(filePath);
-  return Boolean(marketplaces?.[MARKETPLACE_NAME]);
-}
-
-/**
- * 判断 Claude 插件是否已安装
- * @param {string} filePath installed_plugins.json 路径
- * @returns {Promise<boolean>}
- */
-async function isClaudePluginInstalled(filePath) {
-  const installedPlugins = await readJsonIfExists(filePath);
-  return Boolean(installedPlugins?.plugins?.[`${PLUGIN_NAME}@${MARKETPLACE_NAME}`]?.length);
-}
-
-/**
- * 判断 Codex marketplace 是否已注册
- * @param {string} filePath config.toml 路径
- * @returns {Promise<boolean>}
- */
-async function isCodexMarketplaceRegistered(filePath) {
-  const configText = await readTextIfExists(filePath);
-  if (configText === null) return false;
-  return configText.includes(`[marketplaces.${MARKETPLACE_NAME}]`);
 }
 
 /**

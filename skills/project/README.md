@@ -25,6 +25,7 @@
 | 接口新增、接口更新 | `.agent/api.md` | 接口目录、类型命名、枚举协同 |
 | 系统常量、枚举维护 | `.agent/index/constants.json` | 常量索引与文件位置 |
 | 公共方法、工具函数 | `.agent/index/utils.json` | 公共方法索引与用途 |
+| 注释规范 | `.agent/comment.md` | 注释语言、格式与使用边界 |
 | 命名、代码顺序 | `.agent/naming.md` | 通用命名与代码组织规范 |
 | lint、交付收尾 | `.agent/scripts/lint.md` | 收尾检查与交付清单 |
 
@@ -35,6 +36,7 @@
 ```text
 .agent/
 ├── README.md
+├── comment.md
 ├── naming.md
 ├── constant.md
 ├── api.md
