@@ -111,10 +111,10 @@ export function buildCodexRouterSkillBody(options) {
 
 1. 先检查当前仓库，再读取用户当前消息。
 2. 将任务路由到以下三类之一：
-   - 初始化项目规则：按 \`$am-init\` 的流程执行
+   - 初始化项目根文档、索引、lint 脚本和技术栈目录：按 \`$am-init\` 的流程执行
    - 新增或更新接口、类型、枚举：按 \`$am-api\` 的流程执行
    - 输出 AI SOP 计划：按 \`$am-plan\` 的流程执行
-3. 如果用户消息里已经明确出现 init、初始化、AGENTS、CLAUDE、.agent，直接走初始化流程。
+3. 如果用户消息里已经明确出现 init、初始化、AGENTS.md、CLAUDE.md、index、constants、utils、lint.md、admin、tauri、uni，直接走初始化流程。
 4. 如果用户消息里已经明确出现 api、接口、type、类型、enum、枚举，直接走接口流程。
 5. 如果用户消息里已经明确出现 plan、计划、SOP、调研、拆任务，直接走计划流程。
 6. 如果仍然无法判断，用一句话要求用户补充目标，并提示可用入口：\`$am-init\`、\`$am-api\`、\`$am-plan\`。
@@ -140,7 +140,7 @@ ${commandGuideMap.plan}
 ## 示例
 
 \`\`\`
-$am init 当前 Rust 项目，初始化 AGENTS.md + CLAUDE.md + .agent
+$am init 当前 admin 项目，初始化 AGENTS.md、CLAUDE.md、.agent/index、.agent/scripts 和 .agent/admin
 \`\`\`
 `;
 }
@@ -193,27 +193,19 @@ function buildPromptBody(options) {
  * @returns {string}
  */
 function buildInitPromptBody(options) {
-  const { commandGuide, referenceDir, command, platform = 'mac' } = options;
+  const { commandGuide, referenceDir, command } = options;
   const heading = getPromptHeading(options.surfaceType, command);
   const skillEntryPath = getReferencePath(referenceDir, 'SKILL.md');
-  const skillReadmePath = getReferencePath(referenceDir, 'README.md');
-  const projectAgentsPath = getReferencePath(referenceDir, 'project', 'AGENTS.md');
-  const projectClaudePath = getReferencePath(referenceDir, 'project', 'CLAUDE.md');
-  const apiPath = getReferencePath(referenceDir, 'api.md');
-  const commentPath = getReferencePath(referenceDir, 'comment.md');
-  const constantPath = getReferencePath(referenceDir, 'constant.md');
-  const namingPath = getReferencePath(referenceDir, 'naming.md');
-  const vuePath = getReferencePath(referenceDir, 'vue.md');
-  const unocssPath = getReferencePath(referenceDir, 'unocss.md');
-  const adminPath = getReferencePath(referenceDir, 'admin', 'rules.md');
-  const adminTablePath = getReferencePath(referenceDir, 'admin', 'table.md');
-  const adminModalPath = getReferencePath(referenceDir, 'admin', 'modal.md');
-  const tauriPath = getReferencePath(referenceDir, 'tauri', 'rules.md');
-  const uniPath = getReferencePath(referenceDir, 'uni', 'rules.md');
-  const constantsIndexPath = getReferencePath(referenceDir, 'index', 'constants.json');
-  const utilsIndexPath = getReferencePath(referenceDir, 'index', 'utils.json');
-  const lintGuidePath = getReferencePath(referenceDir, 'project', 'scripts', 'lint.md');
-  const sharedRuleLinkStrategy = getSharedRuleLinkStrategy(platform);
+  const projectAgentsPath = getReferencePath(referenceDir, 'template', 'AGENTS.md');
+  const projectClaudePath = getReferencePath(referenceDir, 'template', 'CLAUDE.md');
+  const constantsIndexPath = getReferencePath(referenceDir, 'template', 'index', 'constants.json');
+  const utilsIndexPath = getReferencePath(referenceDir, 'template', 'index', 'utils.json');
+  const lintGuidePath = getReferencePath(referenceDir, 'template', 'scripts', 'lint.md');
+  const adminRulePath = getReferencePath(referenceDir, 'template', 'admin', 'rules.md');
+  const adminTablePath = getReferencePath(referenceDir, 'template', 'admin', 'table.md');
+  const adminModalPath = getReferencePath(referenceDir, 'template', 'admin', 'modal.md');
+  const tauriRulePath = getReferencePath(referenceDir, 'template', 'tauri', 'rules.md');
+  const uniRulePath = getReferencePath(referenceDir, 'template', 'uni', 'rules.md');
 
   return `# ${heading}
 
@@ -222,67 +214,41 @@ function buildInitPromptBody(options) {
 ## 执行要求
 
 1. 先阅读主 skill 入口：\`${skillEntryPath}\`
-2. 先检查当前仓库，再判断项目类型与技术栈
-3. 初始化时必须增量维护项目根目录 \`.gitignore\`；如果缺少以下区块就补齐且不要重复添加：
-   \`\`\`
-   # ai
-   .agent
-   AGENTS.md
-   CLAUDE.md
-   \`\`\`
-4. 项目自有文件只创建或更新这些：\`AGENTS.md\`、\`CLAUDE.md\`、\`.agent/index/constants.json\`、\`.agent/index/utils.json\`、\`.agent/scripts/lint.md\`
-5. 除上述文件外，禁止新增任何项目侧 \`.agent/**\` 普通文件；尤其不要创建 \`.agent/README.md\`，也不要生成项目定制版 \`.agent/naming.md\`、\`.agent/constant.md\`、\`.agent/api.md\`、\`.agent/tauri/rules.md\`
-6. \`AGENTS.md\` 与 \`CLAUDE.md\` 必须保持轻量，只做路由与边界说明，不要把全部规则直接展开
-7. 通用规则文件不要复制到项目里；优先把以下项目路径创建为指向已安装参考文件的软链接，并按只读规则使用：
-   - \`.agent/comment.md\` -> \`${commentPath}\`
-   - \`.agent/naming.md\` -> \`${namingPath}\`
-   - \`.agent/constant.md\` -> \`${constantPath}\`
-   - \`.agent/api.md\` -> \`${apiPath}\`
-   - 识别为 Vue 项目时再追加 \`.agent/vue.md\` -> \`${vuePath}\`
-   - 识别为 UnoCSS 项目时再追加 \`.agent/unocss.md\` -> \`${unocssPath}\`
-   - 识别为 admin 项目时再追加 \`.agent/admin/rules.md\` -> \`${adminPath}\`、\`.agent/admin/table.md\` -> \`${adminTablePath}\`、\`.agent/admin/modal.md\` -> \`${adminModalPath}\`
-   - 识别为 tauri 项目时再追加 \`.agent/tauri/rules.md\` -> \`${tauriPath}\`
-   - 识别为 uni 项目时再追加 \`.agent/uni/rules.md\` -> \`${uniPath}\`
-8. 初始化完成后，项目自有文件优先；共享软链接只用于读取规则，禁止直接修改已安装的参考目录，也禁止因为“技术栈定制”而把这些共享规则改写成项目普通文件
-9. 软链接创建策略：
-${sharedRuleLinkStrategy}
-10. 硬性验收：结束前必须逐项检查以下条件，任何一项不满足都视为初始化失败并需要继续修正：
-   - \`.agent/README.md\` 不存在
-   - \`.agent/comment.md\`、\`.agent/naming.md\`、\`.agent/constant.md\`、\`.agent/api.md\` 如果存在，必须是软链接，不能是普通文件
-   - \`.agent/vue.md\`、\`.agent/unocss.md\`、\`.agent/admin/*.md\`、\`.agent/tauri/rules.md\`、\`.agent/uni/rules.md\` 如果存在，必须是软链接，不能是普通文件
-   - 如果误创建了上述普通文件，先删除，再重建为软链接
-   - 如果因平台权限导致软链接创建失败，明确报出阻塞原因，不要复制文件替代
-11. 仅在命中对应场景时按需扩读以下参考：
-   - \`${skillReadmePath}\`
-   - \`${projectAgentsPath}\`
-   - \`${projectClaudePath}\`
-   - \`${apiPath}\`
-   - \`${commentPath}\`
-   - \`${constantPath}\`
-   - \`${namingPath}\`
-   - \`${vuePath}\`
-   - \`${unocssPath}\`
-   - \`${adminPath}\`
-   - \`${tauriPath}\`
-   - \`${uniPath}\`
-   - \`${constantsIndexPath}\`
-   - \`${utilsIndexPath}\`
-   - \`${lintGuidePath}\`
-12. 保持 Aimin 约束：命名简洁、避免过度封装、禁止无语义缩写、常见缩写补中文语义
-13. 先检查真实代码仓库，再把 $ARGUMENTS 当成补充上下文
+2. 先检查当前仓库，再判断当前项目主类型
+3. 固定创建或更新这 5 个项目文件：\`AGENTS.md\`、\`CLAUDE.md\`、\`.agent/index/constants.json\`、\`.agent/index/utils.json\`、\`.agent/scripts/lint.md\`
+4. 再按当前项目主类型在以下目录中最多选择一组并创建或更新：
+   - admin 项目：\`.agent/admin/rules.md\`、\`.agent/admin/table.md\`、\`.agent/admin/modal.md\`
+   - tauri 项目：\`.agent/tauri/rules.md\`
+   - uni 项目：\`.agent/uni/rules.md\`
+5. 识别项目类型时优先看真实仓库特征：
+   - admin：存在后台管理目录结构、\`src/views/**\`、\`src/api/modules/**\`、Element Plus / ProTable / admin 约定
+   - tauri：存在 \`src-tauri/\`、\`tauri.conf.json\`、\`Cargo.toml\`、\`@tauri-apps/*\`
+   - uni：存在 \`pages.json\`、\`manifest.json\`、\`uni_modules/\`、\`uni.*\` API
+6. 如果未命中 admin、tauri、uni，技术栈目录不要创建
+7. 如果缺少父目录，只补根目录 \`AGENTS.md\`、\`CLAUDE.md\`，以及 \`.agent/index/\`、\`.agent/scripts/\` 和命中的 \`.agent/admin/\`、\`.agent/tauri/\`、\`.agent/uni/\`
+8. \`AGENTS.md\` 与 \`CLAUDE.md\` 以参考模板为基线创建或更新，只保留入口、边界和路由说明这类根文档内容，优先引用当前项目已有或本次初始化生成的规则文件，不要把不存在的 \`.agent/**\` 文件写成硬依赖
+9. 不要创建或修改根目录 \`.gitignore\`
+10. 不要创建 \`.agent/README.md\`，也不要创建 \`.agent/comment.md\`、\`.agent/naming.md\`、\`.agent/constant.md\`、\`.agent/api.md\`、\`.agent/vue.md\`、\`.agent/unocss.md\`
+11. \`skills/template/\` 是初始化模板目录；初始化时将其中内容放到目标项目对应位置，再按额外规则向 \`.agent/**\` 追加内容。\`AGENTS.md\` 与 \`CLAUDE.md\` 默认保留参考模板原有标题、结构和路由，不要把模板整体改写成另一份文档
+12. 如果需要添加项目自己的规则，应在 \`.agent/\` 下重新开一个一级目录，使用 \`# {projectname}\` 作为标题，并在该目录下展开项目专属约定
+13. \`AGENTS.md\`、\`CLAUDE.md\`、\`.agent/index/**\`、\`.agent/scripts/lint.md\` 与命中的技术栈目录必须保持项目自有文件；如果项目里已有相关文件，只做最小增量更新，补齐缺失段落，不要覆盖用户已有内容
+14. 仅在命中对应场景时按需参考：\`${projectAgentsPath}\`、\`${projectClaudePath}\`、\`${constantsIndexPath}\`、\`${utilsIndexPath}\`、\`${lintGuidePath}\`、\`${adminRulePath}\`、\`${adminTablePath}\`、\`${adminModalPath}\`、\`${tauriRulePath}\`、\`${uniRulePath}\`
+15. 保持 Aimin 约束：命名简洁、避免过度封装、禁止无语义缩写、常见缩写补中文语义
+16. 先检查真实代码仓库，再把 $ARGUMENTS 当成补充上下文
 
 ## 已安装参考
 
 - 主入口：\`${skillEntryPath}\`
 - 项目 AGENTS 模板：\`${projectAgentsPath}\`
 - 项目 CLAUDE 模板：\`${projectClaudePath}\`
-- 注释规范：\`${commentPath}\`
-- 命名规范：\`${namingPath}\`
-- 常量规范：\`${constantPath}\`
-- 接口规范：\`${apiPath}\`
 - 常量索引模板：\`${constantsIndexPath}\`
 - 公共方法索引模板：\`${utilsIndexPath}\`
 - Lint SOP 模板：\`${lintGuidePath}\`
+- Admin 规则模板：\`${adminRulePath}\`
+- Admin 表格模板：\`${adminTablePath}\`
+- Admin 弹窗模板：\`${adminModalPath}\`
+- Tauri 规则模板：\`${tauriRulePath}\`
+- Uni 规则模板：\`${uniRulePath}\`
 
 ## 命令说明
 
@@ -312,8 +278,8 @@ function buildApiPromptBody(options) {
   const commentPath = getReferencePath(referenceDir, 'comment.md');
   const constantPath = getReferencePath(referenceDir, 'constant.md');
   const namingPath = getReferencePath(referenceDir, 'naming.md');
-  const constantsIndexPath = getReferencePath(referenceDir, 'index', 'constants.json');
-  const utilsIndexPath = getReferencePath(referenceDir, 'index', 'utils.json');
+  const constantsIndexPath = getReferencePath(referenceDir, 'template', 'index', 'constants.json');
+  const utilsIndexPath = getReferencePath(referenceDir, 'template', 'index', 'utils.json');
 
   return `# ${heading}
 
@@ -367,9 +333,9 @@ function buildPlanPromptBody(options) {
   const { commandGuide, referenceDir, command } = options;
   const heading = getPromptHeading(options.surfaceType, command);
   const skillEntryPath = getReferencePath(referenceDir, 'SKILL.md');
-  const projectAgentsPath = getReferencePath(referenceDir, 'project', 'AGENTS.md');
-  const projectClaudePath = getReferencePath(referenceDir, 'project', 'CLAUDE.md');
-  const lintGuidePath = getReferencePath(referenceDir, 'project', 'scripts', 'lint.md');
+  const projectAgentsPath = getReferencePath(referenceDir, 'template', 'AGENTS.md');
+  const projectClaudePath = getReferencePath(referenceDir, 'template', 'CLAUDE.md');
+  const lintGuidePath = getReferencePath(referenceDir, 'template', 'scripts', 'lint.md');
 
   return `# ${heading}
 
@@ -413,28 +379,6 @@ ${command.example}
  */
 function getReferencePath(referenceDir, ...segments) {
   return toPosixPath(path.join(referenceDir, ...segments));
-}
-
-/**
- * 获取共享规则软链接策略说明
- * @param {'mac' | 'windows'} platform 安装平台
- * @returns {string}
- */
-function getSharedRuleLinkStrategy(platform) {
-  if (platform === 'windows') {
-    return [
-      '   - Windows: 使用 PowerShell 创建文件级 SymbolicLink，优先命令：`New-Item -ItemType SymbolicLink -Path <项目路径> -Target <参考路径> -Force`',
-      '   - Windows: 创建前如果目标已存在，先用 `Remove-Item -Force` 删除已有文件或软链接，再创建新的 SymbolicLink',
-      '   - Windows: 这里链接的大多是文件，不要用目录 Junction 代替文件软链接',
-      '   - Windows: 如果因未开启 Developer Mode 或权限不足导致 SymbolicLink 创建失败，明确说明阻塞原因，不要静默复制文件替代'
-    ].join('\n');
-  }
-
-  return [
-    '   - macOS/Linux: 使用 `ln -sfn <参考路径> <项目路径>` 创建或刷新文件软链接',
-    '   - macOS/Linux: 如果父目录不存在，先创建父目录，再执行 `ln -sfn`',
-    '   - macOS/Linux: 如目标路径是普通文件且无法直接覆盖，先删除旧文件，再重新建立软链接'
-  ].join('\n');
 }
 
 /**

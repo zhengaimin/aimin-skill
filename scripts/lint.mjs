@@ -26,16 +26,24 @@ async function validateCommandGuides() {
   }
 
   const initContent = await readText(path.join(repoRoot, 'commands', 'init.md'));
+  assertIncludes(initContent, '固定初始化项目根目录 `AGENTS.md`、`CLAUDE.md` 与项目侧 `.agent/index/**`、`.agent/scripts/lint.md`', 'init 命令说明缺少固定初始化目标');
   assertIncludes(initContent, 'AGENTS.md', 'init 命令说明缺少 AGENTS.md');
   assertIncludes(initContent, 'CLAUDE.md', 'init 命令说明缺少 CLAUDE.md');
   assertIncludes(initContent, '.agent/index/constants.json', 'init 命令说明缺少 constants 索引');
   assertIncludes(initContent, '.agent/index/utils.json', 'init 命令说明缺少 utils 索引');
-  assertIncludes(initContent, '.agent/comment.md', 'init 命令说明缺少 comment 路由');
   assertIncludes(initContent, '.agent/scripts/lint.md', 'init 命令说明缺少 lint 路由');
+  assertIncludes(initContent, '.agent/admin/rules.md', 'init 命令说明缺少 admin 目录说明');
+  assertIncludes(initContent, '.agent/tauri/rules.md', 'init 命令说明缺少 tauri 目录说明');
+  assertIncludes(initContent, '.agent/uni/rules.md', 'init 命令说明缺少 uni 目录说明');
+  assertIncludes(initContent, '最多选择一组', 'init 命令说明缺少技术栈目录选择约束');
+  assertIncludes(initContent, '不要创建或修改根目录 `.gitignore`', 'init 命令说明缺少 .gitignore 限制');
+  assertIncludes(initContent, '以参考模板为基线创建或更新', 'init 命令说明缺少根文档模板基线要求');
+  assertIncludes(initContent, '项目独有内容只在单独标题下追加', 'init 命令说明缺少项目独有内容追加约束');
+  assertIncludes(initContent, '不要把模板整体改写成另一份文档', 'init 命令说明缺少禁止整份改写模板约束');
   assertIncludes(initContent, '对本次修改文件执行 lint 校验', 'init 命令说明缺少改动文件 lint 要求');
   assertIncludes(initContent, '/am:init', 'init 命令说明缺少 /am:init');
-  assertIncludes(initContent, '非 admin 项目，不要把 admin 专属检查写进 `.agent/scripts/lint.md`', 'init 命令说明缺少非 admin 限制');
-  assertIncludes(initContent, 'prettier/prettier', 'init 命令说明缺少 CRLF / prettier 提示');
+  assertExcludes(initContent, '软链接', 'init 命令说明不应再包含软链接策略');
+  assertExcludes(initContent, 'prettier/prettier', 'init 命令说明不应包含 admin 专属 prettier 提示');
 
   const apiContent = await readText(path.join(repoRoot, 'commands', 'api.md'));
   assertIncludes(apiContent, '/am:api', 'api 命令说明缺少 /am:api');
@@ -68,14 +76,17 @@ async function validateProjectTemplates() {
     assertIncludes(content, '.agent/index/utils.json', '渐进式模板缺少 utils 路由');
     assertIncludes(content, '.agent/comment.md', '渐进式模板缺少 comment 路由');
     assertIncludes(content, '.agent/scripts/lint.md', '渐进式模板缺少 lint 路由');
-    assertIncludes(content, '对本次修改文件做校验', '渐进式模板缺少改动文件 lint 要求');
+    assertIncludes(content, '按 `.agent/scripts/lint.md` 对本次修改文件执行 lint 脚本', '渐进式模板缺少改动文件 lint 要求');
+    assertIncludes(content, '如果项目后续补充 `.agent/comment.md`', '渐进式模板缺少注释规范要求');
   }
 
   assertIncludes(projectReadmeContent, '.agent/comment.md', 'README 模板缺少 comment 路由');
   assertIncludes(projectReadmeContent, '├── comment.md', 'README 模板缺少 comment 目录结构');
-  assertIncludes(lintContent, '.agent/comment.md', 'lint 模板缺少 comment 引用');
-  assertIncludes(lintContent, '.agent/naming.md', 'lint 模板缺少 naming 引用');
+  assertIncludes(lintContent, '.agent/index/constants.json', 'lint 模板缺少 constants 索引引用');
+  assertIncludes(lintContent, '.agent/index/utils.json', 'lint 模板缺少 utils 索引引用');
   assertIncludes(lintContent, '对本次修改文件执行 lint 校验', 'lint 模板缺少改动文件 lint 要求');
+  assertExcludes(lintContent, '.agent/comment.md', 'lint 模板不应依赖 comment 规则');
+  assertExcludes(lintContent, '.agent/naming.md', 'lint 模板不应依赖 naming 规则');
   assertExcludes(lintContent, 'admin 额外检查', 'lint 模板不应默认包含 admin 额外检查');
   assertExcludes(lintContent, '未使用变量', 'lint 模板不应默认包含 admin 未使用变量检查');
 }

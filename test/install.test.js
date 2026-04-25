@@ -28,15 +28,67 @@ async function createTempHomeDir() {
  * @returns {Promise<NodeJS.ProcessEnv>}
  */
 async function createMockToolEnv(homeDir, options = {}) {
-  const { claudeUpdateShouldFail = false } = options;
+  const {
+    claudeRemoveShouldFailMissing = false,
+    claudeUpdateShouldFail = false,
+    failIfDebuggerEnvPresent = false
+  } = options;
   const binDir = path.join(homeDir, 'bin');
-  const claudePath = path.join(binDir, 'claude');
-  const codexPath = path.join(binDir, 'codex');
+  const isWindows = process.platform === 'win32';
+  const claudePath = path.join(binDir, isWindows ? 'claude.cmd' : 'claude');
+  const codexPath = path.join(binDir, isWindows ? 'codex.cmd' : 'codex');
 
   await fs.mkdir(binDir, { recursive: true });
 
-  await fs.writeFile(claudePath, `#!/bin/sh
+  if (isWindows) {
+    await fs.writeFile(claudePath, `@echo off
+${failIfDebuggerEnvPresent ? 'if defined NODE_OPTIONS exit /b 1\r\nif defined NODE_INSPECT_RESUME_ON_START exit /b 1\r\nif defined VSCODE_INSPECTOR_OPTIONS exit /b 1\r\n' : ''}
+if "%1"=="plugin" if "%2"=="marketplace" if "%3"=="add" (
+  node -e "const fs=require('fs'); const path=require('path'); const home=process.env.HOME; const source=process.argv[1]; fs.mkdirSync(path.join(home,'.claude','plugins'),{recursive:true}); const data={'aimin-skill':{source:{source:'local',path:source},installLocation:path.join(home,'.claude','plugins','marketplaces','aimin-skill'),lastUpdated:'2026-04-22T00:00:00.000Z'}}; fs.writeFileSync(path.join(home,'.claude','plugins','known_marketplaces.json'), JSON.stringify(data, null, 2));" "%4"
+  exit /b 0
+)
+
+if "%1"=="plugin" if "%2"=="marketplace" if "%3"=="update" (
+  ${claudeUpdateShouldFail ? 'echo mock claude update failed 1>&2\r\n  exit /b 1' : 'exit /b 0'}
+)
+
+if "%1"=="plugin" if "%2"=="marketplace" if "%3"=="remove" (
+  ${claudeRemoveShouldFailMissing ? 'echo Marketplace \'aimin-skill\' not found 1>&2\r\n  exit /b 1' : ''}
+  node -e "const fs=require('fs'); const path=require('path'); const home=process.env.HOME; fs.mkdirSync(path.join(home,'.claude','plugins'),{recursive:true}); fs.writeFileSync(path.join(home,'.claude','plugins','known_marketplaces.json'), '{}\\n');"
+  exit /b 0
+)
+
+if "%1"=="plugin" if "%2"=="install" (
+  node -e "const fs=require('fs'); const path=require('path'); const home=process.env.HOME; fs.mkdirSync(path.join(home,'.claude','plugins'),{recursive:true}); const data={version:2,plugins:{'am@aimin-skill':[{'scope':'user','installPath':path.join(home,'.claude','plugins','cache','aimin-skill','am','0.1.0'),'version':'0.1.0','installedAt':'2026-04-22T00:00:00.000Z','lastUpdated':'2026-04-22T00:00:00.000Z'}]}}; fs.writeFileSync(path.join(home,'.claude','plugins','installed_plugins.json'), JSON.stringify(data, null, 2));"
+  exit /b 0
+)
+
+exit /b 0
+`, 'utf8');
+
+    await fs.writeFile(codexPath, `@echo off
+${failIfDebuggerEnvPresent ? 'if defined NODE_OPTIONS exit /b 1\r\nif defined NODE_INSPECT_RESUME_ON_START exit /b 1\r\nif defined VSCODE_INSPECTOR_OPTIONS exit /b 1\r\n' : ''}
+if "%1"=="plugin" if "%2"=="marketplace" if "%3"=="add" (
+  node -e "const fs=require('fs'); const path=require('path'); const home=process.env.HOME; const source=process.argv[1]; fs.mkdirSync(path.join(home,'.codex'),{recursive:true}); const content='[marketplaces.aimin-skill]\\nlast_updated = \\"2026-04-22T00:00:00Z\\"\\nsource_type = \\"local\\"\\nsource = ' + JSON.stringify(source) + '\\n'; fs.writeFileSync(path.join(home,'.codex','config.toml'), content);" "%4"
+  exit /b 0
+)
+
+if "%1"=="plugin" if "%2"=="marketplace" if "%3"=="remove" (
+  node -e "const fs=require('fs'); const path=require('path'); const home=process.env.HOME; fs.mkdirSync(path.join(home,'.codex'),{recursive:true}); fs.writeFileSync(path.join(home,'.codex','config.toml'), '');"
+  exit /b 0
+)
+
+if "%1"=="plugin" if "%2"=="marketplace" if "%3"=="upgrade" (
+  echo Error: marketplace \`aimin-skill\` is not configured as a Git marketplace 1>&2
+  exit /b 1
+)
+
+exit /b 0
+`, 'utf8');
+  } else {
+    await fs.writeFile(claudePath, `#!/bin/sh
 set -eu
+${failIfDebuggerEnvPresent ? '\nif [ -n "${NODE_OPTIONS:-}" ] || [ -n "${NODE_INSPECT_RESUME_ON_START:-}" ] || [ -n "${VSCODE_INSPECTOR_OPTIONS:-}" ]; then\n  exit 1\nfi\n' : ''}
 mkdir -p "$HOME/.claude/plugins"
 
 if [ "$1" = "plugin" ] && [ "$2" = "marketplace" ] && [ "$3" = "add" ]; then
@@ -61,6 +113,7 @@ if [ "$1" = "plugin" ] && [ "$2" = "marketplace" ] && [ "$3" = "update" ]; then
 fi
 
 if [ "$1" = "plugin" ] && [ "$2" = "marketplace" ] && [ "$3" = "remove" ]; then
+  ${claudeRemoveShouldFailMissing ? 'echo "Marketplace \'aimin-skill\' not found" >&2\n  exit 1' : ''}
   cat > "$HOME/.claude/plugins/known_marketplaces.json" <<EOF
 {}
 EOF
@@ -90,8 +143,9 @@ fi
 exit 0
 `, 'utf8');
 
-  await fs.writeFile(codexPath, `#!/bin/sh
+    await fs.writeFile(codexPath, `#!/bin/sh
 set -eu
+${failIfDebuggerEnvPresent ? '\nif [ -n "${NODE_OPTIONS:-}" ] || [ -n "${NODE_INSPECT_RESUME_ON_START:-}" ] || [ -n "${VSCODE_INSPECTOR_OPTIONS:-}" ]; then\n  exit 1\nfi\n' : ''}
 mkdir -p "$HOME/.codex"
 
 if [ "$1" = "plugin" ] && [ "$2" = "marketplace" ] && [ "$3" = "add" ]; then
@@ -112,14 +166,17 @@ fi
 
 exit 0
 `, 'utf8');
+  }
 
-  await fs.chmod(claudePath, 0o755);
-  await fs.chmod(codexPath, 0o755);
+  if (!isWindows) {
+    await fs.chmod(claudePath, 0o755);
+    await fs.chmod(codexPath, 0o755);
+  }
 
   return {
     ...process.env,
     HOME: homeDir,
-    PATH: `${binDir}:${process.env.PATH ?? ''}`
+    PATH: `${binDir}${path.delimiter}${process.env.PATH ?? ''}`
   };
 }
 
@@ -156,11 +213,15 @@ test('init installs local marketplace bundle and registers both tools', async ()
   );
   const projectAgentsTemplate = await readInstalledFile(
     homeDir,
-    '.aimin-skill-marketplace/plugins/am/references/project/AGENTS.md'
+    '.aimin-skill-marketplace/plugins/am/references/template/AGENTS.md'
   );
   const projectClaudeTemplate = await readInstalledFile(
     homeDir,
-    '.aimin-skill-marketplace/plugins/am/references/project/CLAUDE.md'
+    '.aimin-skill-marketplace/plugins/am/references/template/CLAUDE.md'
+  );
+  const projectLintTemplate = await readInstalledFile(
+    homeDir,
+    '.aimin-skill-marketplace/plugins/am/references/template/scripts/lint.md'
   );
   const manifest = JSON.parse(
     await readInstalledFile(homeDir, '.aimin-skill-marketplace/.aimin-skill-manifest.json')
@@ -174,12 +235,23 @@ test('init installs local marketplace bundle and registers both tools', async ()
   assert.match(initCommand, /^# \/am:init$/m);
   assert.match(initCommand, /\/am:init/);
   assert.match(initCommand, /## 执行要求/);
-  assert.match(initCommand, /\.gitignore/);
-  assert.match(initCommand, /# ai/);
-  assert.match(initCommand, /软链接/);
-  assert.match(initCommand, /ln -sfn/);
+  assert.match(initCommand, /固定创建或更新这 5 个项目文件/);
+  assert.match(initCommand, /`AGENTS\.md`/);
+  assert.match(initCommand, /`CLAUDE\.md`/);
+  assert.match(initCommand, /不要创建或修改根目录 `\.gitignore`/);
+  assert.match(initCommand, /`AGENTS\.md` 与 `CLAUDE\.md` 以参考模板为基线创建或更新/);
+  assert.match(initCommand, /`skills\/template\/` 是初始化模板目录/);
+  assert.match(initCommand, /如果需要添加项目自己的规则/);
+  assert.match(initCommand, /不要把模板整体改写成另一份文档/);
   assert.match(initCommand, /\.agent\/README\.md` 不存在/);
-  assert.match(initCommand, /不能是普通文件/);
+  assert.match(initCommand, /\.agent\/index\/constants\.json/);
+  assert.match(initCommand, /\.agent\/index\/utils\.json/);
+  assert.match(initCommand, /\.agent\/admin\/rules\.md/);
+  assert.match(initCommand, /\.agent\/tauri\/rules\.md/);
+  assert.match(initCommand, /\.agent\/uni\/rules\.md/);
+  assert.match(initCommand, /最多选择一组/);
+  assert.doesNotMatch(initCommand, /软链接/);
+  assert.doesNotMatch(initCommand, /ln -sfn/);
   assert.doesNotMatch(initCommand, /The user invoked this command/);
   assert.doesNotMatch(initCommand, /项目 README 模板/);
   assert.match(planSkill, /name: plan/);
@@ -189,10 +261,20 @@ test('init installs local marketplace bundle and registers both tools', async ()
   assert.match(codexRouterSkill, /\$am-init/);
   assert.match(codexInitSkill, /name: am-init/);
   assert.match(codexInitSkill, /用户通过 `\$am-init` 主动调用本 skill/);
+  assert.match(projectAgentsTemplate, /^# Aimin-skill$/m);
   assert.match(projectAgentsTemplate, /\.agent\/index\/constants\.json/);
-  assert.match(projectAgentsTemplate, /软链接/);
-  assert.match(projectAgentsTemplate, /\.agent\/README\.md/);
-  assert.match(projectClaudeTemplate, /\.agent\/README\.md/);
+  assert.match(projectAgentsTemplate, /\.agent\/index\/utils\.json/);
+  assert.match(projectAgentsTemplate, /\.agent\/scripts\/lint\.md/);
+  assert.match(projectAgentsTemplate, /### 读取规则/);
+  assert.match(projectAgentsTemplate, /### 修改边界/);
+  assert.match(projectAgentsTemplate, /### 文档与收尾/);
+  assert.match(projectAgentsTemplate, /\.agent\/comment\.md`（若存在）/);
+  assert.doesNotMatch(projectAgentsTemplate, /都必须参考 `\.agent\/comment\.md`/);
+  assert.equal(projectClaudeTemplate, projectAgentsTemplate);
+  assert.match(projectLintTemplate, /\.agent\/index\/constants\.json/);
+  assert.match(projectLintTemplate, /\.agent\/index\/utils\.json/);
+  assert.doesNotMatch(projectLintTemplate, /\.agent\/comment\.md/);
+  assert.doesNotMatch(projectLintTemplate, /\.agent\/naming\.md/);
   assert.equal(manifest.marketplaceName, 'aimin-skill');
   assert.equal(manifest.pluginName, 'am');
   assert.equal(manifest.platform, process.platform === 'win32' ? 'windows' : 'mac');
@@ -221,7 +303,10 @@ test('init can dispatch to the windows installer explicitly', async () => {
   );
 
   assert.equal(manifest.platform, 'windows');
-  assert.match(initCommand, /New-Item -ItemType SymbolicLink/);
+  assert.match(initCommand, /固定创建或更新这 5 个项目文件/);
+  assert.match(initCommand, /`AGENTS\.md`/);
+  assert.match(initCommand, /`CLAUDE\.md`/);
+  assert.doesNotMatch(initCommand, /SymbolicLink/);
 });
 
 test('init is idempotent and doctor reports ready after install', async () => {
@@ -284,6 +369,35 @@ test('init falls back to remove and add when Claude marketplace update fails', a
   await initUserInstall({ env: initialEnv, homeDir, repoRoot });
 
   const fallbackEnv = await createMockToolEnv(homeDir, { claudeUpdateShouldFail: true });
+  const result = await initUserInstall({ env: fallbackEnv, homeDir, repoRoot });
+
+  assert.equal(
+    result.results.find(item => item.tool.key === 'claude')?.marketplaceStatus,
+    're-added'
+  );
+});
+
+test('init strips debugger env before invoking external CLIs', async () => {
+  const homeDir = await createTempHomeDir();
+  const env = await createMockToolEnv(homeDir, { failIfDebuggerEnvPresent: true });
+  env.NODE_OPTIONS = '--inspect=0';
+  env.NODE_INSPECT_RESUME_ON_START = '1';
+  env.VSCODE_INSPECTOR_OPTIONS = '{"waitForDebugger":""}';
+
+  const result = await initUserInstall({ env, homeDir, repoRoot });
+
+  assert.ok(result.results.every(item => item.status === 'ready'));
+});
+
+test('init tolerates missing Claude marketplace during fallback remove', async () => {
+  const homeDir = await createTempHomeDir();
+  const initialEnv = await createMockToolEnv(homeDir);
+  await initUserInstall({ env: initialEnv, homeDir, repoRoot });
+
+  const fallbackEnv = await createMockToolEnv(homeDir, {
+    claudeRemoveShouldFailMissing: true,
+    claudeUpdateShouldFail: true
+  });
   const result = await initUserInstall({ env: fallbackEnv, homeDir, repoRoot });
 
   assert.equal(

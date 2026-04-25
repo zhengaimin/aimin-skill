@@ -30,9 +30,9 @@ export const COMMAND_DEFINITIONS = [
     key: 'init',
     slashCommand: '/am:init',
     title: 'AM 初始化',
-    description: '按 aimin-skill 规范初始化当前项目的 AGENTS.md、CLAUDE.md 与 .agent 目录',
+    description: '按 aimin-skill 规范初始化 AGENTS.md、CLAUDE.md、.agent/index、.agent/scripts，并按项目类型包含 admin/tauri/uni',
     argumentHint: '[project-notes]',
-    example: '/am:init Vue3 admin 项目，使用 Element Plus + UnoCSS'
+    example: '/am:init 当前 admin 项目，初始化 AGENTS.md、CLAUDE.md、.agent/index、.agent/scripts 和 .agent/admin'
   },
   {
     key: 'api',
@@ -59,7 +59,7 @@ export const CODEX_USER_SKILL_DEFINITIONS = [
     label: '$am',
     type: 'router',
     description: 'Aimin Codex 路由技能，按上下文选择初始化、接口或计划流程',
-    example: '$am init 当前 Rust 项目，初始化 AGENTS.md + CLAUDE.md + .agent'
+    example: '$am init 当前 admin 项目，初始化 AGENTS.md、CLAUDE.md、.agent/index、.agent/scripts 和 .agent/admin'
   },
   ...COMMAND_DEFINITIONS.map(command => ({
     key: `am-${command.key}`,

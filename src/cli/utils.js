@@ -118,7 +118,7 @@ async function collectRelativeFiles(rootDir, currentDir, relativeFiles) {
       continue;
     }
 
-    if (!entry.isFile()) continue;
+    if (!entry.isFile() && !entry.isSymbolicLink()) continue;
     relativeFiles.push(path.relative(rootDir, fullPath));
   }
 }

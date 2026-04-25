@@ -53,9 +53,11 @@ async function registerClaudeTool(options) {
       });
       marketplaceStatus = 'updated';
     } catch {
-      await helpers.runToolCommand(toolPlan.cliCommand, ['plugin', 'marketplace', 'remove', MARKETPLACE_NAME], {
+      await removeMarketplaceRegistration({
         env,
-        homeDir
+        helpers,
+        homeDir,
+        toolPlan
       });
       await helpers.runToolCommand(toolPlan.cliCommand, ['plugin', 'marketplace', 'add', toolPlan.marketplaceSource, '--scope', 'user'], {
         env,
@@ -64,9 +66,11 @@ async function registerClaudeTool(options) {
       marketplaceStatus = 're-added';
     }
   } else {
-    await helpers.runToolCommand(toolPlan.cliCommand, ['plugin', 'marketplace', 'remove', MARKETPLACE_NAME], {
+    await removeMarketplaceRegistration({
       env,
-      homeDir
+      helpers,
+      homeDir,
+      toolPlan
     });
     await helpers.runToolCommand(toolPlan.cliCommand, ['plugin', 'marketplace', 'add', toolPlan.marketplaceSource, '--scope', 'user'], {
       env,
@@ -110,9 +114,11 @@ async function registerCodexTool(options) {
     });
   } else if (marketplaceRegistration.sourceType === 'local') {
     if (marketplaceRegistration.source !== toolPlan.marketplaceSource) {
-      await helpers.runToolCommand(toolPlan.cliCommand, ['plugin', 'marketplace', 'remove', MARKETPLACE_NAME], {
+      await removeMarketplaceRegistration({
         env,
-        homeDir
+        helpers,
+        homeDir,
+        toolPlan
       });
       await helpers.runToolCommand(toolPlan.cliCommand, ['plugin', 'marketplace', 'add', toolPlan.marketplaceSource], {
         env,
@@ -175,6 +181,39 @@ function isClaudeLocalMarketplaceSourceType(sourceType) {
 async function isClaudePluginInstalled(filePath, helpers) {
   const installedPlugins = await helpers.readJsonIfExists(filePath);
   return Boolean(installedPlugins?.plugins?.[`${PLUGIN_NAME}@${MARKETPLACE_NAME}`]?.length);
+}
+
+/**
+ * 删除 marketplace 注册
+ * 缺失 marketplace 时保持幂等
+ * @param {object} options 注册参数
+ * @param {NodeJS.ProcessEnv} options.env 环境变量
+ * @param {object} options.helpers 工具函数
+ * @param {string} options.homeDir 用户目录
+ * @param {object} options.toolPlan 工具计划
+ * @returns {Promise<void>}
+ */
+async function removeMarketplaceRegistration(options) {
+  const { env, helpers, homeDir, toolPlan } = options;
+
+  try {
+    await helpers.runToolCommand(toolPlan.cliCommand, ['plugin', 'marketplace', 'remove', MARKETPLACE_NAME], {
+      env,
+      homeDir
+    });
+  } catch (error) {
+    if (!(error instanceof Error) || !isMarketplaceMissingError(error.message))
+      throw error;
+  }
+}
+
+/**
+ * 判断 marketplace 是否缺失
+ * @param {string} message 错误消息
+ * @returns {boolean}
+ */
+function isMarketplaceMissingError(message) {
+  return /not found|不存在|未找到/i.test(message);
 }
 
 /**

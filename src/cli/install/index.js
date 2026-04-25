@@ -416,12 +416,39 @@ function buildCodexPluginManifest(version) {
       category: 'Productivity',
       capabilities: ['Interactive', 'Write'],
       defaultPrompt: [
-        '用 $am-init 初始化项目规则。',
+        '用 $am-init 初始化 AGENTS.md、CLAUDE.md、.agent/index、.agent/scripts，并按项目类型包含 admin/tauri/uni。',
         '用 $am-api 新增接口。',
         '用 $am-plan 梳理当前项目并输出 SOP。'
       ]
     }
   };
+}
+
+const DEBUGGER_ENV_KEYS = [
+  'NODE_INSPECT_RESUME_ON_START',
+  'NODE_OPTIONS',
+  'VSCODE_INSPECTOR_OPTIONS'
+];
+
+/**
+ * 构建外部工具执行环境
+ * 避免调试器注入污染 Claude / Codex CLI
+ * @param {NodeJS.ProcessEnv} env 原始环境变量
+ * @param {string} homeDir 用户目录
+ * @returns {NodeJS.ProcessEnv}
+ */
+function buildToolCommandEnv(env, homeDir) {
+  const childEnv = {
+    ...env,
+    HOME: homeDir
+  };
+
+  for (const envKey of Object.keys(childEnv)) {
+    if (DEBUGGER_ENV_KEYS.some(debugKey => debugKey.toLowerCase() === envKey.toLowerCase()))
+      delete childEnv[envKey];
+  }
+
+  return childEnv;
 }
 
 /**
@@ -437,10 +464,7 @@ async function runToolCommand(command, args, options) {
   await new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: options.homeDir,
-      env: {
-        ...options.env,
-        HOME: options.homeDir
-      },
+      env: buildToolCommandEnv(options.env, options.homeDir),
       shell: process.platform === 'win32',
       stdio: 'pipe'
     });

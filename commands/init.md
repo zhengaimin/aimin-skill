@@ -1,99 +1,65 @@
-## 目标
+# 目标
 
-`/am:init` 用来初始化项目根目录 `AGENTS.md`、`CLAUDE.md`、`.gitignore` 与最小化的 `.agent/` 规范目录，让规则保持“默认轻量、命中场景再深读”的渐进式披露结构。
+`/am:init` 固定初始化项目根目录 `AGENTS.md`、`CLAUDE.md` 与项目侧 `.agent/index/**`、`.agent/scripts/lint.md`，再根据当前项目主类型在 `.agent/admin/**`、`.agent/tauri/**`、`.agent/uni/**` 中选择一组目录文件。
 
 ## 执行原则
 
-1. 先检查仓库现状与技术栈，再增量创建或更新文件。
-2. 初始化时，增量维护根目录 `.gitignore`，确保包含 AI 规则忽略区块且不重复追加。
-3. `AGENTS.md` 与 `CLAUDE.md` 只保留工作方式、边界和路由表，不要把全部规范直接堆进去。
-4. 项目自有 `.agent` 文件只保留项目索引与收尾脚本；通用规则优先使用系统已安装参考的软链接。
-5. 如果项目里已有相关文件，只做增量更新，不要覆盖用户已有的业务约定。
-6. 除项目索引与收尾脚本外，禁止创建额外的项目侧 `.agent/**` 普通文件；误创建时必须删除并改成软链接。
+1. 先检查仓库现状，再判断当前项目主类型。
+2. 固定创建或更新这 5 个项目文件：
+   - `AGENTS.md`
+   - `CLAUDE.md`
+   - `.agent/index/constants.json`
+   - `.agent/index/utils.json`
+   - `.agent/scripts/lint.md`
+3. 再按当前项目主类型在以下目录中最多选择一组并创建或更新：
+   - admin 项目：`.agent/admin/rules.md`、`.agent/admin/table.md`、`.agent/admin/modal.md`
+   - tauri 项目：`.agent/tauri/rules.md`
+   - uni 项目：`.agent/uni/rules.md`
+4. 如果未命中 admin、tauri、uni，技术栈目录不要创建。
+5. 识别项目类型时优先看真实仓库特征：
+   - admin：存在后台管理目录结构、`src/views/**`、`src/api/modules/**`、Element Plus / ProTable / admin 约定
+   - tauri：存在 `src-tauri/`、`tauri.conf.json`、`Cargo.toml`、`@tauri-apps/*`
+   - uni：存在 `pages.json`、`manifest.json`、`uni_modules/`、`uni.*` API
+6. 如果缺少父目录，只补根目录 `AGENTS.md`、`CLAUDE.md`，以及 `.agent/index/`、`.agent/scripts/` 和命中的 `.agent/admin/`、`.agent/tauri/`、`.agent/uni/`。
+7. `AGENTS.md` 与 `CLAUDE.md` 以参考模板为基线创建或更新，只保留入口、边界和路由说明这类根文档内容，优先引用当前项目已有或本次初始化生成的规则文件，不要把不存在的 `.agent/**` 文件写成硬依赖。
+8. 不要创建或修改根目录 `.gitignore`。
+9. 不要创建 `.agent/README.md`，也不要创建 `.agent/comment.md`、`.agent/naming.md`、`.agent/constant.md`、`.agent/api.md`、`.agent/vue.md`、`.agent/unocss.md`。
+10. `skills/template/` 是初始化模板目录；初始化时将其中内容放到目标项目对应位置，再按额外规则向 `.agent/**` 追加内容。`AGENTS.md` 与 `CLAUDE.md` 默认保留参考模板原有标题、结构和路由，不要把模板整体改写成另一份文档。
+11. 如果需要添加项目自己的规则，应在 `.agent/` 下重新开一个一级目录，使用 `# {projectname}` 作为标题，并在该目录下展开项目专属约定。
+12. 参考模板只用于根文档与命中规则文件的基线结构，不要把无关规则文件复制进项目。
+13. 如果项目里已有相关文件，只做最小增量更新，补齐缺失段落，不要覆盖用户已有内容。
 
 ## 项目自有文件
 
-- `.gitignore`
 - `AGENTS.md`
 - `CLAUDE.md`
 - `.agent/index/constants.json`
 - `.agent/index/utils.json`
 - `.agent/scripts/lint.md`
+- `.agent/admin/rules.md`、`.agent/admin/table.md`、`.agent/admin/modal.md` 中的一组，或 `.agent/tauri/rules.md`，或 `.agent/uni/rules.md`
 
-除这些文件外，项目里不应新增其他 `.agent/**` 普通文件。
-
-## `.gitignore` 要求
-
-初始化时确保 `.gitignore` 至少包含以下内容，并且整个区块只保留一份：
-
-```gitignore
-# ai
-.agent
-AGENTS.md
-CLAUDE.md
-```
-
-## 共享规则软链接
-
-以下通用规则不要复制到项目里，优先软链接到系统已安装的 `aimin-skill` 参考文件，并视为只读：
-
-- `.agent/comment.md`
-- `.agent/naming.md`
-- `.agent/constant.md`
-- `.agent/api.md`
-
-按技术栈命中后再追加：
-
-- `.agent/vue.md`
-- `.agent/unocss.md`
-- `.agent/admin/rules.md`
-- `.agent/admin/table.md`
-- `.agent/admin/modal.md`
-- `.agent/tauri/rules.md`
-- `.agent/uni/rules.md`
-
-这些共享软链接只用于读取规则，不要在项目里直接改写它们。
-
-即使识别到 Tauri、React、Vue、admin、uni 等技术栈，也不要生成项目定制版 `.agent/naming.md`、`.agent/constant.md`、`.agent/api.md`、`.agent/tauri/rules.md` 等普通文件；仍然优先使用共享软链接。
-
-创建这些共享规则软链接时需要按平台处理：
-
-- macOS / Linux：优先使用 `ln -sfn <参考路径> <项目路径>`，必要时先创建父目录或删除旧文件
-- Windows：优先使用 PowerShell `New-Item -ItemType SymbolicLink -Path <项目路径> -Target <参考路径> -Force`
-- Windows：如果目标已存在，先 `Remove-Item -Force` 再创建 SymbolicLink
-- Windows：这里主要是文件链接，不要用目录 Junction 代替文件软链接
-- Windows：如果因 Developer Mode 未开启或权限不足导致 SymbolicLink 失败，要明确说明阻塞，不要静默复制文件替代
+除固定文件和命中的技术栈目录外，本次初始化不应新增任何其他项目文件。
 
 ## 硬性验收
 
 初始化完成前必须满足：
 
+- `AGENTS.md` 存在
+- `CLAUDE.md` 存在
+- `.agent/index/constants.json` 存在
+- `.agent/index/utils.json` 存在
+- `.agent/scripts/lint.md` 存在
+- 当前项目若识别为 admin，则 `.agent/admin/rules.md`、`.agent/admin/table.md`、`.agent/admin/modal.md` 存在
+- 当前项目若识别为 tauri，则 `.agent/tauri/rules.md` 存在
+- 当前项目若识别为 uni，则 `.agent/uni/rules.md` 存在
+- 当前项目未命中 admin、tauri、uni 时，不创建对应技术栈目录
+- 没有创建或修改根目录 `.gitignore`
 - `.agent/README.md` 不存在
-- `.agent/comment.md`、`.agent/naming.md`、`.agent/constant.md`、`.agent/api.md` 如果存在，必须是软链接
-- `.agent/vue.md`、`.agent/unocss.md`、`.agent/admin/*.md`、`.agent/tauri/rules.md`、`.agent/uni/rules.md` 如果存在，必须是软链接
-- 如果误创建了上述普通文件，先删除，再按平台规则重建软链接
-- 如果软链接无法创建，要明确报阻塞，不能复制文件替代
-
-## 路由表要求
-
-在 `AGENTS.md` 与 `CLAUDE.md` 都输出一个表格，至少包含以下映射：
-
-| 场景 | 读取文件 | 说明 |
-| ---- | -------- | ---- |
-| 接口新增、接口更新 | `.agent/api.md` | 接口目录、类型命名、枚举协同 |
-| 系统常量、枚举维护 | `.agent/index/constants.json` | 常量索引、文件位置、枚举值摘要 |
-| 公共方法、工具函数 | `.agent/index/utils.json` | 公共方法索引、用途、文件位置 |
-| 注释规范 | `.agent/comment.md` | 注释语言、格式与使用边界 |
-| 命名、代码顺序 | `.agent/naming.md` | 通用命名与代码组织规范 |
-| lint、交付收尾 | `.agent/scripts/lint.md` | 收尾检查与交付前清单 |
-
-如果识别为 admin 项目，再追加：
-
-| 场景 | 读取文件 | 说明 |
-| ---- | -------- | ---- |
-| admin 页面、表格、弹窗 | `.agent/admin/rules.md` | admin 专用规则 |
-
-如果识别为 tauri 或 uni 项目，也要补对应规则入口。
+- 没有额外创建 `.agent/comment.md`、`.agent/naming.md`、`.agent/constant.md`、`.agent/api.md`、`.agent/vue.md`、`.agent/unocss.md`
+- `AGENTS.md` 与 `CLAUDE.md` 没有把不存在的 `.agent/**` 文件写成强依赖
+- `AGENTS.md` 与 `CLAUDE.md` 保留了参考模板主体，不会被整体改写成另一份最小文档
+- 不同时创建多组技术栈目录；`admin`、`tauri`、`uni` 最多命中一组
+- 如果误创建了上述文件，先删除，再回到最小初始化结果
 
 ## 索引文件要求
 
@@ -116,24 +82,19 @@ CLAUDE.md
 
 ## lint 要求
 
-`.agent/scripts/lint.md` 默认按 `.agent/naming.md` 与 `.agent/comment.md` 做收尾检查。
+`.agent/scripts/lint.md` 至少覆盖以下内容：
 
-代码有修改时，`.agent/scripts/lint.md` 需要求对本次修改文件执行 lint 校验，优先按文件路径或最小范围运行，不默认全量 lint。
-
-非 admin 项目，不要把 admin 专属检查写进 `.agent/scripts/lint.md`。
-
-如果识别为 admin 项目，才额外写入：
-
-- 删除未使用变量
-- 删除未使用导入
-- 删除未使用参数或无意义的占位变量
-- 如果出现 `error  Insert \`␍\`  prettier/prettier`，优先检查并统一 CRLF / LF 行尾
+- 对本次修改文件执行 lint 校验，优先按文件路径或最小范围运行，不默认全量 lint
+- 检查新增或修改的常量、枚举是否已同步到 `.agent/index/constants.json`
+- 检查新增或修改的公共方法、工具函数是否已同步到 `.agent/index/utils.json`
+- 删除无语义缩写、临时命名和无效注释
 
 ## 输出要求
 
 输出结果里需要明确：
 
-- 项目自有文件与共享软链接的边界
-- `.gitignore` 已补充 AI 忽略区块
-- `.agent/index/**` 与 `.agent/scripts/lint.md` 的用途
-- 明确说明 `.agent/README.md` 未创建，且共享规则没有落成项目普通文件
+- 固定初始化了 `AGENTS.md`、`CLAUDE.md`、`.agent/index/**` 与 `.agent/scripts/lint.md`
+- 根据项目类型是否额外初始化了 `.agent/admin/**`、`.agent/tauri/**` 或 `.agent/uni/**`
+- 没有创建或修改 `.gitignore`
+- `AGENTS.md`、`CLAUDE.md` 与 `.agent/index/**`、`.agent/scripts/lint.md` 的用途
+- 明确说明 `.agent/README.md` 与其它无关共享规则文件没有创建
