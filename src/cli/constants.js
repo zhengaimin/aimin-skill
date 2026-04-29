@@ -30,9 +30,9 @@ export const COMMAND_DEFINITIONS = [
     key: 'init',
     slashCommand: '/am:init',
     title: 'AM 初始化',
-    description: '按 aimin-skill 规范初始化 AGENTS.md、CLAUDE.md、.agent/index、.agent/scripts，并按项目类型包含 admin/tauri/uni',
+    description: '按 aimin-skill 规范初始化 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts，并按项目类型包含 admin/tauri/uni',
     argumentHint: '[project-notes]',
-    example: '/am:init 当前 admin 项目，初始化 AGENTS.md、CLAUDE.md、.agent/index、.agent/scripts 和 .agent/admin'
+    example: '/am:init 当前 admin 项目，初始化 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 和 .agent/admin'
   },
   {
     key: 'api',
@@ -49,6 +49,14 @@ export const COMMAND_DEFINITIONS = [
     description: '输出 AI SOP 计划，聚焦当前项目代码与规则，仅在手动调用 /am:plan 时触发',
     argumentHint: '[task-notes]',
     example: '/am:plan 为设备管理页新增批量分组能力，先输出实施 SOP'
+  },
+  {
+    key: 'update',
+    slashCommand: '/am:update',
+    title: 'AM Update',
+    description: '按版本号强制升级项目侧 .agent 规则，并只更新 AGENTS.md 的 # Aimin-skill 段落',
+    argumentHint: '[update-notes]',
+    example: '/am:update 升级当前项目 .agent 与 AGENTS.md'
   }
 ];
 
@@ -59,7 +67,7 @@ export const CODEX_USER_SKILL_DEFINITIONS = [
     label: '$am',
     type: 'router',
     description: 'Aimin Codex 路由技能，按上下文选择初始化、接口或计划流程',
-    example: '$am init 当前 admin 项目，初始化 AGENTS.md、CLAUDE.md、.agent/index、.agent/scripts 和 .agent/admin'
+    example: '$am init 当前 admin 项目，初始化 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 和 .agent/admin'
   },
   ...COMMAND_DEFINITIONS.map(command => ({
     key: `am-${command.key}`,

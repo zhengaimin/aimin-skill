@@ -1,3 +1,5 @@
+<!-- aimin-skill-version: 0.1.0 -->
+
 # lint SOP
 
 交付前按以下顺序做收尾检查。

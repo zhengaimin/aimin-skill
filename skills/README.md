@@ -4,7 +4,8 @@
 
 ## 适用场景
 
-- 初始化项目内的 `AGENTS.md`、`CLAUDE.md`、`.agent/index/**`、`.agent/scripts/lint.md` 与按项目类型命中的 `admin/tauri/uni` 目录
+- 初始化项目内的 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md` 与按项目类型命中的 `admin/tauri/uni` 目录
+- 按版本升级项目内 `.agent/**` 与 `AGENTS.md` 的 `# Aimin-skill` 受管段落
 - 按 Aimin 规范新增接口、类型、枚举
 - 根据项目类型从 `template/admin`、`template/tauri`、`template/uni` 加载补充模板
 
@@ -17,6 +18,7 @@
 - **禁止无语义缩写**：如 `a1`、`tmp2`、`xx`
 - **注释规范独立维护**：统一参考 `comment.md`
 - **代码改动后做定向 lint**：只校验本次修改文件，优先最小范围
+- **规则文件版本化**：初始化到 `.agent/**` 的受管文件必须带版本号，版本不一致时强制更新
 
 ## 规则索引
 
@@ -45,6 +47,7 @@
 
 | 命令       | 说明                                                |
 | ---------- | --------------------------------------------------- |
-| `/am:init` | 初始化 `AGENTS.md`、`CLAUDE.md`、`.agent/index/**`、`.agent/scripts/lint.md`，并按项目类型包含 `admin/tauri/uni` |
+| `/am:init` | 初始化 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md`，并按项目类型包含 `admin/tauri/uni` |
 | `/am:api`  | 新增接口、类型与枚举                                |
 | `/am:plan` | 手动触发 AI SOP 计划，聚焦当前项目代码与规则        |
+| `/am:update` | 按版本升级 `.agent/**`，并只更新 `AGENTS.md` 的 `# Aimin-skill` 段落 |

@@ -199,6 +199,10 @@ test('init installs local marketplace bundle and registers both tools', async ()
     homeDir,
     '.aimin-skill-marketplace/plugins/am/commands/init.md'
   );
+  const updateCommand = await readInstalledFile(
+    homeDir,
+    '.aimin-skill-marketplace/plugins/am/commands/update.md'
+  );
   const planSkill = await readInstalledFile(
     homeDir,
     '.aimin-skill-marketplace/plugins/am/skills/plan/SKILL.md'
@@ -210,6 +214,10 @@ test('init installs local marketplace bundle and registers both tools', async ()
   const codexInitSkill = await readInstalledFile(
     homeDir,
     '.codex/skills/am-init/SKILL.md'
+  );
+  const codexUpdateSkill = await readInstalledFile(
+    homeDir,
+    '.codex/skills/am-update/SKILL.md'
   );
   const projectAgentsTemplate = await readInstalledFile(
     homeDir,
@@ -223,6 +231,30 @@ test('init installs local marketplace bundle and registers both tools', async ()
     homeDir,
     '.aimin-skill-marketplace/plugins/am/references/template/scripts/lint.md'
   );
+  const apiRule = await readInstalledFile(
+    homeDir,
+    '.aimin-skill-marketplace/plugins/am/references/api.md'
+  );
+  const commentRule = await readInstalledFile(
+    homeDir,
+    '.aimin-skill-marketplace/plugins/am/references/comment.md'
+  );
+  const namingRule = await readInstalledFile(
+    homeDir,
+    '.aimin-skill-marketplace/plugins/am/references/naming.md'
+  );
+  const constantsIndexTemplate = JSON.parse(
+    await readInstalledFile(
+      homeDir,
+      '.aimin-skill-marketplace/plugins/am/references/template/index/constants.json'
+    )
+  );
+  const utilsIndexTemplate = JSON.parse(
+    await readInstalledFile(
+      homeDir,
+      '.aimin-skill-marketplace/plugins/am/references/template/index/utils.json'
+    )
+  );
   const manifest = JSON.parse(
     await readInstalledFile(homeDir, '.aimin-skill-marketplace/.aimin-skill-manifest.json')
   );
@@ -235,11 +267,17 @@ test('init installs local marketplace bundle and registers both tools', async ()
   assert.match(initCommand, /^# \/am:init$/m);
   assert.match(initCommand, /\/am:init/);
   assert.match(initCommand, /## 执行要求/);
-  assert.match(initCommand, /固定创建或更新这 5 个项目文件/);
+  assert.match(initCommand, /固定创建或更新这些项目文件/);
   assert.match(initCommand, /`AGENTS\.md`/);
   assert.match(initCommand, /`CLAUDE\.md`/);
+  assert.match(initCommand, /\.agent\/api\.md/);
+  assert.match(initCommand, /\.agent\/comment\.md/);
+  assert.match(initCommand, /\.agent\/naming\.md/);
   assert.match(initCommand, /不要创建或修改根目录 `\.gitignore`/);
   assert.match(initCommand, /`AGENTS\.md` 与 `CLAUDE\.md` 以参考模板为基线创建或更新/);
+  assert.match(initCommand, /只更新 `# Aimin-skill`/);
+  assert.match(initCommand, /版本号与参考文件不一致/);
+  assert.match(initCommand, /强制更新/);
   assert.match(initCommand, /`skills\/template\/` 是初始化模板目录/);
   assert.match(initCommand, /如果需要添加项目自己的规则/);
   assert.match(initCommand, /不要把模板整体改写成另一份文档/);
@@ -250,27 +288,57 @@ test('init installs local marketplace bundle and registers both tools', async ()
   assert.match(initCommand, /\.agent\/tauri\/rules\.md/);
   assert.match(initCommand, /\.agent\/uni\/rules\.md/);
   assert.match(initCommand, /最多选择一组/);
+  assert.doesNotMatch(initCommand, /也不要创建 `\.agent\/comment\.md`/);
+  assert.doesNotMatch(initCommand, /也不要创建 `\.agent\/naming\.md`/);
+  assert.doesNotMatch(initCommand, /也不要创建 `\.agent\/api\.md`/);
   assert.doesNotMatch(initCommand, /软链接/);
   assert.doesNotMatch(initCommand, /ln -sfn/);
   assert.doesNotMatch(initCommand, /The user invoked this command/);
   assert.doesNotMatch(initCommand, /项目 README 模板/);
+  assert.match(updateCommand, /Managed by aimin-skill/);
+  assert.match(updateCommand, /^# \/am:update$/m);
+  assert.match(updateCommand, /\.agent\/api\.md/);
+  assert.match(updateCommand, /\.agent\/comment\.md/);
+  assert.match(updateCommand, /\.agent\/naming\.md/);
+  assert.match(updateCommand, /强制覆盖/);
+  assert.match(updateCommand, /只更新 `# Aimin-skill`/);
+  assert.match(updateCommand, /不更新 `CLAUDE\.md`/);
   assert.match(planSkill, /name: plan/);
   assert.match(planSkill, /调研/);
   assert.doesNotMatch(planSkill, /(git|远端|分支|冲突)/);
   assert.match(codexRouterSkill, /name: am/);
   assert.match(codexRouterSkill, /\$am-init/);
+  assert.match(codexRouterSkill, /\$am-update/);
   assert.match(codexInitSkill, /name: am-init/);
   assert.match(codexInitSkill, /用户通过 `\$am-init` 主动调用本 skill/);
+  assert.match(codexUpdateSkill, /name: am-update/);
+  assert.match(codexUpdateSkill, /用户通过 `\$am-update` 主动调用本 skill/);
   assert.match(projectAgentsTemplate, /^# Aimin-skill$/m);
+  assert.match(projectAgentsTemplate, /<!-- aimin-skill-version: 0\.1\.2 -->/);
+  assert.match(projectAgentsTemplate, /\.agent\/api\.md/);
+  assert.match(projectAgentsTemplate, /\.agent\/comment\.md/);
+  assert.match(projectAgentsTemplate, /\.agent\/naming\.md/);
   assert.match(projectAgentsTemplate, /\.agent\/index\/constants\.json/);
   assert.match(projectAgentsTemplate, /\.agent\/index\/utils\.json/);
   assert.match(projectAgentsTemplate, /\.agent\/scripts\/lint\.md/);
   assert.match(projectAgentsTemplate, /### 读取规则/);
   assert.match(projectAgentsTemplate, /### 修改边界/);
+  assert.match(projectAgentsTemplate, /### 代码注释/);
+  assert.match(projectAgentsTemplate, /新增或修改代码时，同步检查注释是否需要补充、调整或删除/);
+  assert.match(projectAgentsTemplate, /具体范围、格式和边界以 `\.agent\/comment\.md` 为准/);
+  assert.doesNotMatch(projectAgentsTemplate, /新增或修改代码必须补充必要中文注释/);
+  assert.doesNotMatch(projectAgentsTemplate, /变量、计算属性定义使用中文 `\/\*\* \*\/` 注释/);
+  assert.doesNotMatch(projectAgentsTemplate, /Vue `script setup`/);
   assert.match(projectAgentsTemplate, /### 文档与收尾/);
-  assert.match(projectAgentsTemplate, /\.agent\/comment\.md`（若存在）/);
+  assert.doesNotMatch(projectAgentsTemplate, /\.agent\/comment\.md`（若存在）/);
   assert.doesNotMatch(projectAgentsTemplate, /都必须参考 `\.agent\/comment\.md`/);
   assert.equal(projectClaudeTemplate, projectAgentsTemplate);
+  assert.match(apiRule, /<!-- aimin-skill-version: 0\.1\.0 -->/);
+  assert.match(commentRule, /<!-- aimin-skill-version: 0\.1\.0 -->/);
+  assert.match(namingRule, /<!-- aimin-skill-version: 0\.1\.0 -->/);
+  assert.equal(constantsIndexTemplate.version, '0.1.0');
+  assert.equal(utilsIndexTemplate.version, '0.1.0');
+  assert.match(projectLintTemplate, /<!-- aimin-skill-version: 0\.1\.0 -->/);
   assert.match(projectLintTemplate, /\.agent\/index\/constants\.json/);
   assert.match(projectLintTemplate, /\.agent\/index\/utils\.json/);
   assert.doesNotMatch(projectLintTemplate, /\.agent\/comment\.md/);
@@ -303,9 +371,12 @@ test('init can dispatch to the windows installer explicitly', async () => {
   );
 
   assert.equal(manifest.platform, 'windows');
-  assert.match(initCommand, /固定创建或更新这 5 个项目文件/);
+  assert.match(initCommand, /固定创建或更新这些项目文件/);
   assert.match(initCommand, /`AGENTS\.md`/);
   assert.match(initCommand, /`CLAUDE\.md`/);
+  assert.match(initCommand, /\.agent\/api\.md/);
+  assert.match(initCommand, /\.agent\/comment\.md/);
+  assert.match(initCommand, /\.agent\/naming\.md/);
   assert.doesNotMatch(initCommand, /SymbolicLink/);
 });
 
@@ -319,11 +390,11 @@ test('init is idempotent and doctor reports ready after install', async () => {
   assert.equal(report.tools.length, 2);
   assert.ok(report.tools.every(toolReport => toolReport.status === 'ready'));
   assert.ok(report.tools.every(toolReport => toolReport.bundleStatus === 'ready'));
-  assert.ok(report.tools.every(toolReport => toolReport.commandReports.length === 3));
+  assert.ok(report.tools.every(toolReport => toolReport.commandReports.length === 4));
   assert.ok(
     report.tools
       .filter(toolReport => toolReport.tool.key === 'codex')
-      .every(toolReport => toolReport.codexUserSkillReports.length === 4)
+      .every(toolReport => toolReport.codexUserSkillReports.length === 5)
   );
   assert.ok(
     report.tools.every(toolReport =>

@@ -86,7 +86,7 @@
 
 如果任务涉及以下内容，计划里要显式写出同步动作：
 
-- 接口变更：同步项目侧索引或根文档中涉及的项目约定，不要修改共享规则软链接 `.agent/api.md`
+- 接口变更：同步项目侧索引或根文档中涉及的项目约定，不要修改规则文件 `.agent/api.md`
 - 常量或枚举变更：同步 `.agent/index/constants.json`
 - 公共方法变更：同步 `.agent/index/utils.json`
 - 收尾规则：同步 `.agent/scripts/lint.md`

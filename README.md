@@ -8,8 +8,8 @@
 
 - 安装本地 `aimin-skill` marketplace 与 `am` plugin。
 - 注册到 Claude Code 与 Codex 的用户级 marketplace。
-- 为 Claude Code 提供 `/am:init`、`/am:api`、`/am:plan` 命令。
-- 为 Codex 提供 `$am`、`$am-init`、`$am-api`、`$am-plan` skills。
+- 为 Claude Code 提供 `/am:init`、`/am:api`、`/am:plan`、`/am:update` 命令。
+- 为 Codex 提供 `$am`、`$am-init`、`$am-api`、`$am-plan`、`$am-update` skills。
 - 复制 `skills/` 规则资料到 plugin 的 `references/` 目录，供命令运行时读取。
 - 支持 `doctor` 检查安装状态，支持 `--force` 重建本地安装内容。
 
@@ -92,7 +92,8 @@ pnpm run setup:force
 ├── am/
 ├── am-init/
 ├── am-api/
-└── am-plan/
+├── am-plan/
+└── am-update/
 ```
 
 同时会尝试更新：
@@ -104,9 +105,10 @@ pnpm run setup:force
 
 | 命令 | 说明 | 示例 |
 | --- | --- | --- |
-| `/am:init` | 初始化项目侧 `AGENTS.md`、`CLAUDE.md`、`.agent/index/**`、`.agent/scripts/lint.md`，并按项目类型包含 `admin`、`tauri` 或 `uni` 模板。 | `/am:init 当前 admin 项目，初始化规则文件` |
+| `/am:init` | 初始化项目侧 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md`，并按项目类型包含 `admin`、`tauri` 或 `uni` 模板。 | `/am:init 当前 admin 项目，初始化规则文件` |
 | `/am:api` | 按 Aimin 规范新增或更新接口、类型与枚举，并维护 `.agent/index/**` 索引。 | `/am:api 新增设备分组列表查询接口` |
 | `/am:plan` | 手动输出 AI SOP 计划，聚焦当前项目代码与规则，不直接改代码。 | `/am:plan 为设备管理页新增批量分组能力` |
+| `/am:update` | 按版本号升级项目侧 `.agent/**`，并只更新 `AGENTS.md` 的 `# Aimin-skill` 段落。 | `/am:update 升级当前项目规则` |
 
 ## Codex skills
 
@@ -116,6 +118,7 @@ pnpm run setup:force
 | `$am-init` | 命令 skill | 等价于初始化流程，按项目类型写入规则文件。 | `$am-init 初始化 AGENTS.md、CLAUDE.md 和 .agent` |
 | `$am-api` | 命令 skill | 等价于接口流程，新增接口、类型、枚举并维护索引。 | `$am-api 新增设备分组列表查询接口` |
 | `$am-plan` | 命令 skill | 等价于计划流程，只输出 SOP 计划。 | `$am-plan 先规划批量分组实现步骤` |
+| `$am-update` | 命令 skill | 等价于升级流程，按版本更新 `.agent/**` 与 `AGENTS.md` 的受管段落。 | `$am-update 升级当前项目规则` |
 
 ## 规则资料
 
@@ -125,10 +128,10 @@ pnpm run setup:force
 | --- | --- |
 | `skills/SKILL.md` | skill 入口与路由规则。 |
 | `skills/README.md` | 规则总览。 |
-| `skills/api.md` | 接口与类型规范。 |
+| `skills/api.md` | 接口与类型规范，初始化到 `.agent/api.md`。 |
 | `skills/constant.md` | 常量与枚举规范。 |
-| `skills/comment.md` | 注释规范。 |
-| `skills/naming.md` | 命名规范。 |
+| `skills/comment.md` | 注释规范，初始化到 `.agent/comment.md`。 |
+| `skills/naming.md` | 命名规范，初始化到 `.agent/naming.md`。 |
 | `skills/vue.md` | Vue 组件规范。 |
 | `skills/unocss.md` | UnoCSS 样式规范。 |
 | `skills/template/AGENTS.md` | 项目侧 `AGENTS.md` 模板。 |
@@ -148,7 +151,8 @@ bin/
 commands/
 ├── init.md                 # /am:init 命令源文件
 ├── api.md                  # /am:api 命令源文件
-└── plan.md                 # /am:plan 命令源文件
+├── plan.md                 # /am:plan 命令源文件
+└── update.md               # /am:update 命令源文件
 
 scripts/
 ├── lint.mjs                # 资源完整性检查

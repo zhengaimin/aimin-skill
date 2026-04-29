@@ -1,3 +1,5 @@
+<!-- aimin-skill-version: 0.1.0 -->
+
 # 后台管理规则
 
 适用于 admin/xxx 后台管理模块的接口与页面开发。

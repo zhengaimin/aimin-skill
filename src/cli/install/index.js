@@ -348,7 +348,7 @@ async function readCommandGuideMap(sourceCommandDir) {
 function buildClaudeMarketplace(version) {
   return {
     name: MARKETPLACE_NAME,
-    description: 'Aimin 本地命令 marketplace，提供 /am:init、/am:api、/am:plan',
+    description: 'Aimin 本地命令 marketplace，提供 /am:init、/am:api、/am:plan、/am:update',
     owner: {
       name: 'Aimin',
       email: 'aimin@example.com'
@@ -411,14 +411,15 @@ function buildCodexPluginManifest(version) {
     interface: {
       displayName: 'Aimin Skill',
       shortDescription: 'Aimin 命令插件',
-      longDescription: '提供 Aimin 项目规范参考，并配合 $am、$am-init、$am-api、$am-plan 使用。',
+      longDescription: '提供 Aimin 项目规范参考，并配合 $am、$am-init、$am-api、$am-plan、$am-update 使用。',
       developerName: 'Aimin',
       category: 'Productivity',
       capabilities: ['Interactive', 'Write'],
       defaultPrompt: [
-        '用 $am-init 初始化 AGENTS.md、CLAUDE.md、.agent/index、.agent/scripts，并按项目类型包含 admin/tauri/uni。',
+        '用 $am-init 初始化 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts，并按项目类型包含 admin/tauri/uni。',
         '用 $am-api 新增接口。',
-        '用 $am-plan 梳理当前项目并输出 SOP。'
+        '用 $am-plan 梳理当前项目并输出 SOP。',
+        '用 $am-update 按版本升级项目 .agent 与 AGENTS.md。'
       ]
     }
   };

@@ -1,3 +1,5 @@
+<!-- aimin-skill-version: 0.1.0 -->
+
 # UniApp 项目规则
 
 适用于 UniApp 跨平台开发（小程序、H5、App）。

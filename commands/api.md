@@ -16,7 +16,7 @@
 2. 请求函数命名继续遵循 `[httpMethod][Action]Api`。
 3. 请求与响应类型继续遵循 `Req[HttpMethod][Action][Feature]Api` 与 `Res[HttpMethod][Action][Feature]Api`。
 4. 接口里出现枚举字段时，优先引用项目已有枚举值类型；若不存在，再新增常量并同步索引。
-5. `.agent/api.md`、`.agent/comment.md`、`.agent/constant.md`、`.agent/naming.md` 等共享规则软链接默认只读，不要在接口任务里改写它们。
+5. `.agent/api.md`、`.agent/comment.md`、`.agent/constant.md`、`.agent/naming.md` 等规则文件默认只读，不要在接口任务里改写它们。
 
 ## 索引维护
 

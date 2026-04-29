@@ -1,3 +1,5 @@
+<!-- aimin-skill-version: 0.1.0 -->
+
 # Tauri 项目规则
 
 适用于 Tauri 桌面应用开发（Rust 后端 + Vue/React 前端）。
