@@ -90,6 +90,7 @@ async function validateCommandGuides() {
   assertIncludes(sessionContent, '当前会话', 'session 命令说明缺少当前会话来源');
   assertIncludes(sessionContent, '不要覆盖', 'session 命令说明缺少防覆盖要求');
   assertIncludes(sessionContent, '不要修改 `AGENTS.md`', 'session 命令说明缺少边界要求');
+  assertIncludes(sessionContent, 'Markdown 表格', 'session 命令说明缺少表格化归档要求');
 }
 
 async function validateProjectTemplates() {

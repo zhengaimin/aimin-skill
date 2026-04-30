@@ -1,6 +1,6 @@
 {
   "name": "aimin-skill",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Install aimin-skill commands and skill bundle into Claude Code and Codex",
   "type": "module",
   "bin": {

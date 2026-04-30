@@ -321,8 +321,10 @@ test('init installs local marketplace bundle and registers both tools', async ()
   assert.match(sessionCommand, /^# \/am:session$/m);
   assert.match(sessionCommand, /\.agent\/docs/);
   assert.match(sessionCommand, /不要覆盖/);
+  assert.match(sessionCommand, /Markdown 表格/);
   assert.match(sessionSkill, /name: session/);
   assert.match(sessionSkill, /会话主题、背景与目标、已确认信息/);
+  assert.match(sessionSkill, /Markdown 表格/);
   assert.match(codexRouterSkill, /name: am/);
   assert.match(codexRouterSkill, /\$am-init/);
   assert.match(codexRouterSkill, /\$am-update/);
@@ -333,6 +335,7 @@ test('init installs local marketplace bundle and registers both tools', async ()
   assert.match(codexUpdateSkill, /用户通过 `\$am-update` 主动调用本 skill/);
   assert.match(codexSessionSkill, /name: am-session/);
   assert.match(codexSessionSkill, /用户通过 `\$am-session` 主动调用本 skill/);
+  assert.match(codexSessionSkill, /Markdown 表格/);
   assert.match(projectAgentsTemplate, /^# Aimin-skill$/m);
   assert.match(projectAgentsTemplate, /<!-- aimin-skill-version: 0\.1\.2 -->/);
   assert.match(projectAgentsTemplate, /\.agent\/api\.md/);
