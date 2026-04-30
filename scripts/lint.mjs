@@ -83,11 +83,19 @@ async function validateCommandGuides() {
   assertIncludes(updateContent, '只更新 `# Aimin-skill`', 'update 命令说明缺少 AGENTS 受管段落要求');
   assertIncludes(updateContent, '不更新 `CLAUDE.md`', 'update 命令说明不应更新 CLAUDE.md');
   assertIncludes(updateContent, '版本号与参考文件不一致', 'update 命令说明缺少版本比较要求');
+
+  const sessionContent = await readText(path.join(repoRoot, 'commands', 'session.md'));
+  assertIncludes(sessionContent, '/am:session', 'session 命令说明缺少 /am:session');
+  assertIncludes(sessionContent, '.agent/docs/', 'session 命令说明缺少 .agent/docs 输出目录');
+  assertIncludes(sessionContent, '当前会话', 'session 命令说明缺少当前会话来源');
+  assertIncludes(sessionContent, '不要覆盖', 'session 命令说明缺少防覆盖要求');
+  assertIncludes(sessionContent, '不要修改 `AGENTS.md`', 'session 命令说明缺少边界要求');
 }
 
 async function validateProjectTemplates() {
   const agentsContent = await readText(path.join(repoRoot, 'skills', 'template', 'AGENTS.md'));
   const claudeContent = await readText(path.join(repoRoot, 'skills', 'template', 'CLAUDE.md'));
+  const skillReadmeContent = await readText(path.join(repoRoot, 'skills', 'README.md'));
   const lintContent = await readText(path.join(repoRoot, 'skills', 'template', 'scripts', 'lint.md'));
 
   for (const content of [agentsContent, claudeContent]) {
@@ -104,6 +112,8 @@ async function validateProjectTemplates() {
     assertIncludes(content, '具体范围、格式和边界以 `.agent/comment.md` 为准', '渐进式模板缺少 comment 规则引用');
   }
 
+  assertIncludes(skillReadmeContent, 'comment.md', 'README 缺少 comment 规则说明');
+  assertIncludes(skillReadmeContent, '/am:session', 'README 缺少 session 命令说明');
   assertIncludes(lintContent, '.agent/index/constants.json', 'lint 模板缺少 constants 索引引用');
   assertIncludes(lintContent, '.agent/index/utils.json', 'lint 模板缺少 utils 索引引用');
   assertIncludes(lintContent, MARKDOWN_VERSION_MARKER, 'lint 模板缺少版本号');

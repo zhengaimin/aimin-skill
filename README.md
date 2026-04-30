@@ -2,14 +2,14 @@
 
 `aimin-skill` 是一个本地 npm CLI，用来把 Aimin 的 Claude Code / Codex 命令、skills 与规则文件打包成本地 marketplace/plugin，并注册到当前用户环境。
 
-它适合把同一套团队规范安装到多个项目中：初始化项目规则、按规范新增接口、输出实施计划，并在 Claude Code 与 Codex 中保持一致入口。
+它适合把同一套团队规范安装到多个项目中：初始化项目规则、按规范新增接口、输出实施计划、归档当前会话，并在 Claude Code 与 Codex 中保持一致入口。
 
 ## 功能概览
 
 - 安装本地 `aimin-skill` marketplace 与 `am` plugin。
 - 注册到 Claude Code 与 Codex 的用户级 marketplace。
-- 为 Claude Code 提供 `/am:init`、`/am:api`、`/am:plan`、`/am:update` 命令。
-- 为 Codex 提供 `$am`、`$am-init`、`$am-api`、`$am-plan`、`$am-update` skills。
+- 为 Claude Code 提供 `/am:init`、`/am:api`、`/am:plan`、`/am:update`、`/am:session` 命令。
+- 为 Codex 提供 `$am`、`$am-init`、`$am-api`、`$am-plan`、`$am-update`、`$am-session` skills。
 - 复制 `skills/` 规则资料到 plugin 的 `references/` 目录，供命令运行时读取。
 - 支持 `doctor` 检查安装状态，支持 `--force` 重建本地安装内容。
 
@@ -93,7 +93,8 @@ pnpm run setup:force
 ├── am-init/
 ├── am-api/
 ├── am-plan/
-└── am-update/
+├── am-update/
+└── am-session/
 ```
 
 同时会尝试更新：
@@ -109,16 +110,18 @@ pnpm run setup:force
 | `/am:api` | 按 Aimin 规范新增或更新接口、类型与枚举，并维护 `.agent/index/**` 索引。 | `/am:api 新增设备分组列表查询接口` |
 | `/am:plan` | 手动输出 AI SOP 计划，聚焦当前项目代码与规则，不直接改代码。 | `/am:plan 为设备管理页新增批量分组能力` |
 | `/am:update` | 按版本号升级项目侧 `.agent/**`，并只更新 `AGENTS.md` 的 `# Aimin-skill` 段落。 | `/am:update 升级当前项目规则` |
+| `/am:session` | 提取当前会话中已确认的信息，并输出到 `.agent/docs/`。 | `/am:session 将本次接口讨论整理为实现记录` |
 
 ## Codex skills
 
 | Skill | 类型 | 说明 | 示例 |
 | --- | --- | --- | --- |
-| `$am` | 路由 skill | 根据上下文选择初始化、接口或计划流程。 | `$am init 当前 admin 项目` |
+| `$am` | 路由 skill | 根据上下文选择初始化、接口、计划或会话归档流程。 | `$am init 当前 admin 项目` |
 | `$am-init` | 命令 skill | 等价于初始化流程，按项目类型写入规则文件。 | `$am-init 初始化 AGENTS.md、CLAUDE.md 和 .agent` |
 | `$am-api` | 命令 skill | 等价于接口流程，新增接口、类型、枚举并维护索引。 | `$am-api 新增设备分组列表查询接口` |
 | `$am-plan` | 命令 skill | 等价于计划流程，只输出 SOP 计划。 | `$am-plan 先规划批量分组实现步骤` |
 | `$am-update` | 命令 skill | 等价于升级流程，按版本更新 `.agent/**` 与 `AGENTS.md` 的受管段落。 | `$am-update 升级当前项目规则` |
+| `$am-session` | 命令 skill | 等价于会话归档流程，输出 `.agent/docs/*.md`。 | `$am-session 归档当前会话` |
 
 ## 规则资料
 
@@ -152,7 +155,8 @@ commands/
 ├── init.md                 # /am:init 命令源文件
 ├── api.md                  # /am:api 命令源文件
 ├── plan.md                 # /am:plan 命令源文件
-└── update.md               # /am:update 命令源文件
+├── update.md               # /am:update 命令源文件
+└── session.md              # /am:session 命令源文件
 
 scripts/
 ├── lint.mjs                # 资源完整性检查

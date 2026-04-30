@@ -1,16 +1,17 @@
 ---
 name: aimin-skill
-description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 与按项目类型命中的 admin/tauri/uni 目录、加载规则并新增接口
+description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 与按项目类型命中的 admin/tauri/uni 目录、加载规则并新增接口，或将当前会话归档到 .agent/docs
 ---
 
 # Aimin Skill
 
 ## Use When
 
-- 用户明确提到 `aimin-skill`、`am:init`、`am:api`、`am:plan`、`am:update`
+- 用户明确提到 `aimin-skill`、`am:init`、`am:api`、`am:plan`、`am:update`、`am:session`
 - 需要初始化项目内的 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md` 与按项目类型命中的 `.agent/admin/**`、`.agent/tauri/**`、`.agent/uni/**`
 - 需要按版本升级项目内的 `.agent/**` 与 `AGENTS.md` 的 `# Aimin-skill` 受管段落
 - 需要按 Aimin 规范新增接口、类型、常量或项目类型规则
+- 需要提取当前会话信息，并输出到项目 `.agent/docs/` 目录
 
 ## Workflow
 
@@ -39,6 +40,7 @@ description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.a
 9. 初始化时检查受管 `.agent/**` 文件版本；目标缺少版本号或版本不一致时，按参考文件强制更新
 10. 更新 `AGENTS.md`、`CLAUDE.md` 时只替换 `# Aimin-skill` 受管段落，不改项目独有规则
 11. `/am:update` 只升级 `.agent/**` 与 `AGENTS.md`，不更新 `CLAUDE.md`
+12. `/am:session` 只创建或更新 `.agent/docs/*.md`，不要顺带初始化规则文件或进入代码实现
 
 ## Constraints
 
