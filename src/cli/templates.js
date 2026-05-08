@@ -110,19 +110,21 @@ export function buildCodexRouterSkillBody(options) {
 ## 路由规则
 
 1. 先检查当前仓库，再读取用户当前消息。
-2. 将任务路由到以下五类之一：
+2. 将任务路由到以下六类之一：
    - 初始化项目根文档、api/comment/naming 规则、索引、lint 脚本和技术栈目录：按 \`$am-init\` 的流程执行
    - 新增或更新接口、类型、枚举：按 \`$am-api\` 的流程执行
    - 输出 AI SOP 计划：按 \`$am-plan\` 的流程执行
+   - 按 Aimin 与阿里风格 review 当前代码：按 \`$am-review\` 的流程执行
    - 升级项目侧 \`.agent/**\` 与 \`AGENTS.md\`：按 \`$am-update\` 的流程执行
    - 提取当前会话信息并输出到 \`.agent/docs/\`：按 \`$am-session\` 的流程执行
 3. 如果用户消息里已经明确出现 am:update、$am-update、规则升级、版本更新、升级 .agent、升级 AGENTS.md、强制更新 .agent，直接走升级流程。
 4. 如果用户消息里已经明确出现 session、会话、归档、整理当前对话、输出到 .agent/docs，直接走会话归档流程。
-5. 如果用户消息里已经明确出现 init、初始化、AGENTS.md、CLAUDE.md、api.md、comment.md、naming.md、index、constants、utils、lint.md、admin、tauri、uni，直接走初始化流程。
-6. 如果用户消息里已经明确出现 api、接口、type、类型、enum、枚举，直接走接口流程。
-7. 如果用户消息里已经明确出现 plan、计划、SOP、调研、拆任务，直接走计划流程。
-8. 如果仍然无法判断，用一句话要求用户补充目标，并提示可用入口：\`$am-init\`、\`$am-api\`、\`$am-plan\`、\`$am-update\`、\`$am-session\`。
-9. 路由完成后，直接按对应流程落地，不要只停留在“建议使用哪个 skill”。
+5. 如果用户消息里已经明确出现 review、代码审查、代码评审、阿里风格检查、优化建议、改动建议，直接走 review 流程。
+6. 如果用户消息里已经明确出现 init、初始化、AGENTS.md、CLAUDE.md、api.md、comment.md、naming.md、index、constants、utils、lint.md、admin、tauri、uni，直接走初始化流程。
+7. 如果用户消息里已经明确出现 api、接口、type、类型、enum、枚举，直接走接口流程。
+8. 如果用户消息里已经明确出现 plan、计划、SOP、调研、拆任务，直接走计划流程。
+9. 如果仍然无法判断，用一句话要求用户补充目标，并提示可用入口：\`$am-init\`、\`$am-api\`、\`$am-plan\`、\`$am-review\`、\`$am-update\`、\`$am-session\`。
+10. 路由完成后，直接按对应流程落地，不要只停留在“建议使用哪个 skill”。
 
 ## 已安装参考
 
@@ -141,6 +143,10 @@ ${commandGuideMap.api}
 
 ${commandGuideMap.plan}
 
+## Review 流程摘要
+
+${commandGuideMap.review}
+
 ## 升级流程摘要
 
 ${commandGuideMap.update}
@@ -153,6 +159,7 @@ ${commandGuideMap.session}
 
 \`\`\`
 $am init 当前 admin 项目，初始化 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 和 .agent/admin
+$am-review 检查当前工作区改动是否符合阿里风格
 $am-update 升级当前项目 .agent 与 AGENTS.md
 $am-session 归档当前会话
 \`\`\`
@@ -196,6 +203,7 @@ function buildPromptBody(options) {
   if (command.key === 'api') return buildApiPromptBody(options);
   if (command.key === 'update') return buildUpdatePromptBody(options);
   if (command.key === 'plan') return buildPlanPromptBody(options);
+  if (command.key === 'review') return buildReviewPromptBody(options);
   return buildSessionPromptBody(options);
 }
 
@@ -457,6 +465,65 @@ function buildPlanPromptBody(options) {
 - 主入口：\`${skillEntryPath}\`
 - 项目 AGENTS 模板：\`${projectAgentsPath}\`
 - 项目 CLAUDE 模板：\`${projectClaudePath}\`
+- Lint SOP 模板：\`${lintGuidePath}\`
+
+## 命令说明
+
+${commandGuide}
+
+## 示例
+
+\`\`\`
+${command.example}
+\`\`\`
+`;
+}
+
+/**
+ * 生成 review 主体
+ * @param {object} options 生成参数
+ * @param {string} options.commandGuide 命令说明
+ * @param {string} options.referenceDir 已安装参考目录
+ * @param {object} options.command 命令定义
+ * @returns {string}
+ */
+function buildReviewPromptBody(options) {
+  const { commandGuide, referenceDir, command } = options;
+  const heading = getPromptHeading(options.surfaceType, command);
+  const skillEntryPath = getReferencePath(referenceDir, 'SKILL.md');
+  const commentPath = getReferencePath(referenceDir, 'comment.md');
+  const namingPath = getReferencePath(referenceDir, 'naming.md');
+  const apiPath = getReferencePath(referenceDir, 'api.md');
+  const constantPath = getReferencePath(referenceDir, 'constant.md');
+  const lintGuidePath = getReferencePath(referenceDir, 'template', 'scripts', 'lint.md');
+  const adminRulePath = getReferencePath(referenceDir, 'template', 'admin', 'rules.md');
+  const adminTablePath = getReferencePath(referenceDir, 'template', 'admin', 'table.md');
+  const adminModalPath = getReferencePath(referenceDir, 'template', 'admin', 'modal.md');
+
+  return `# ${heading}
+
+用户调用命令参数：$ARGUMENTS
+
+## 执行要求
+
+1. 这个命令用于 review 当前代码，只有用户主动调用 \`${command.slashCommand}\` 或 \`${command.key}\` 场景时才生效
+2. 先检查当前仓库、用户指定范围和项目规则，再读取待 review 的代码
+3. 如果用户指定文件、目录、PR、功能点或改动范围，优先 review 指定范围；未指定时优先 review 当前工作区改动
+4. 如果项目里已有 \`AGENTS.md\`、\`CLAUDE.md\`、\`.agent/comment.md\`、\`.agent/naming.md\`、\`.agent/api.md\`、\`.agent/index/constants.json\`、\`.agent/index/utils.json\`，优先以项目侧文件为准；规则文件按只读处理
+5. 项目侧规则缺失时，按需参考：\`${commentPath}\`、\`${namingPath}\`、\`${apiPath}\`、\`${constantPath}\`、\`${lintGuidePath}\`
+6. 如果识别为 admin 项目，额外按需参考：\`${adminRulePath}\`、\`${adminTablePath}\`、\`${adminModalPath}\`
+7. 默认只输出 review 结果，不直接修改文件；只有用户明确要求“顺手修复”“直接改”“边 review 边改”时，才进入代码修改流程
+8. 按阿里风格重点检查：公开 API TSDoc、字段级注释、WHY 注释、TODO/FIXME/HACK 前缀、命名可读性、接口类型、枚举常量、业务边界、未使用代码与必要测试
+9. 输出必须 findings 优先，按严重程度排序，并给出文件路径、行号、问题和建议改法
+10. 不要泛泛而谈，不要把纯个人偏好写成必须修改项；没有必须修改的问题时明确说明
+
+## 已安装参考
+
+- 主入口：\`${skillEntryPath}\`
+- 注释规范：\`${commentPath}\`
+- 命名规范：\`${namingPath}\`
+- 接口规范：\`${apiPath}\`
+- 常量与枚举规范：\`${constantPath}\`
 - Lint SOP 模板：\`${lintGuidePath}\`
 
 ## 命令说明

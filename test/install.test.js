@@ -207,6 +207,14 @@ test('init installs local marketplace bundle and registers both tools', async ()
     homeDir,
     '.aimin-skill-marketplace/plugins/am/skills/plan/SKILL.md'
   );
+  const reviewCommand = await readInstalledFile(
+    homeDir,
+    '.aimin-skill-marketplace/plugins/am/commands/review.md'
+  );
+  const reviewSkill = await readInstalledFile(
+    homeDir,
+    '.aimin-skill-marketplace/plugins/am/skills/review/SKILL.md'
+  );
   const sessionCommand = await readInstalledFile(
     homeDir,
     '.aimin-skill-marketplace/plugins/am/commands/session.md'
@@ -226,6 +234,10 @@ test('init installs local marketplace bundle and registers both tools', async ()
   const codexUpdateSkill = await readInstalledFile(
     homeDir,
     '.codex/skills/am-update/SKILL.md'
+  );
+  const codexReviewSkill = await readInstalledFile(
+    homeDir,
+    '.codex/skills/am-review/SKILL.md'
   );
   const codexSessionSkill = await readInstalledFile(
     homeDir,
@@ -254,6 +266,10 @@ test('init installs local marketplace bundle and registers both tools', async ()
   const namingRule = await readInstalledFile(
     homeDir,
     '.aimin-skill-marketplace/plugins/am/references/naming.md'
+  );
+  const constantRule = await readInstalledFile(
+    homeDir,
+    '.aimin-skill-marketplace/plugins/am/references/constant.md'
   );
   const constantsIndexTemplate = JSON.parse(
     await readInstalledFile(
@@ -318,6 +334,13 @@ test('init installs local marketplace bundle and registers both tools', async ()
   assert.match(planSkill, /name: plan/);
   assert.match(planSkill, /调研/);
   assert.doesNotMatch(planSkill, /(git|远端|分支|冲突)/);
+  assert.match(reviewCommand, /^# \/am:review$/m);
+  assert.match(reviewCommand, /阿里风格/);
+  assert.match(reviewCommand, /默认只输出 review 结果/);
+  assert.match(reviewCommand, /Findings/);
+  assert.match(reviewSkill, /name: review/);
+  assert.match(reviewSkill, /按阿里风格重点检查/);
+  assert.match(reviewSkill, /默认只输出 review 结果/);
   assert.match(sessionCommand, /^# \/am:session$/m);
   assert.match(sessionCommand, /\.agent\/docs/);
   assert.match(sessionCommand, /不要覆盖/);
@@ -327,12 +350,16 @@ test('init installs local marketplace bundle and registers both tools', async ()
   assert.match(sessionSkill, /Markdown 表格/);
   assert.match(codexRouterSkill, /name: am/);
   assert.match(codexRouterSkill, /\$am-init/);
+  assert.match(codexRouterSkill, /\$am-review/);
   assert.match(codexRouterSkill, /\$am-update/);
   assert.match(codexRouterSkill, /\$am-session/);
   assert.match(codexInitSkill, /name: am-init/);
   assert.match(codexInitSkill, /用户通过 `\$am-init` 主动调用本 skill/);
   assert.match(codexUpdateSkill, /name: am-update/);
   assert.match(codexUpdateSkill, /用户通过 `\$am-update` 主动调用本 skill/);
+  assert.match(codexReviewSkill, /name: am-review/);
+  assert.match(codexReviewSkill, /用户通过 `\$am-review` 主动调用本 skill/);
+  assert.match(codexReviewSkill, /Findings/);
   assert.match(codexSessionSkill, /name: am-session/);
   assert.match(codexSessionSkill, /用户通过 `\$am-session` 主动调用本 skill/);
   assert.match(codexSessionSkill, /Markdown 表格/);
@@ -356,9 +383,10 @@ test('init installs local marketplace bundle and registers both tools', async ()
   assert.doesNotMatch(projectAgentsTemplate, /\.agent\/comment\.md`（若存在）/);
   assert.doesNotMatch(projectAgentsTemplate, /都必须参考 `\.agent\/comment\.md`/);
   assert.equal(projectClaudeTemplate, projectAgentsTemplate);
-  assert.match(apiRule, /<!-- aimin-skill-version: 0\.1\.0 -->/);
-  assert.match(commentRule, /<!-- aimin-skill-version: 0\.1\.0 -->/);
-  assert.match(namingRule, /<!-- aimin-skill-version: 0\.1\.0 -->/);
+  assert.match(apiRule, /<!-- aimin-skill-version: 0\.1\.1 -->/);
+  assert.match(commentRule, /<!-- aimin-skill-version: 0\.1\.1 -->/);
+  assert.match(namingRule, /<!-- aimin-skill-version: 0\.1\.1 -->/);
+  assert.match(constantRule, /<!-- aimin-skill-version: 0\.1\.1 -->/);
   assert.equal(constantsIndexTemplate.version, '0.1.0');
   assert.equal(utilsIndexTemplate.version, '0.1.0');
   assert.match(projectLintTemplate, /<!-- aimin-skill-version: 0\.1\.0 -->/);
@@ -413,11 +441,11 @@ test('init is idempotent and doctor reports ready after install', async () => {
   assert.equal(report.tools.length, 2);
   assert.ok(report.tools.every(toolReport => toolReport.status === 'ready'));
   assert.ok(report.tools.every(toolReport => toolReport.bundleStatus === 'ready'));
-  assert.ok(report.tools.every(toolReport => toolReport.commandReports.length === 5));
+  assert.ok(report.tools.every(toolReport => toolReport.commandReports.length === 6));
   assert.ok(
     report.tools
       .filter(toolReport => toolReport.tool.key === 'codex')
-      .every(toolReport => toolReport.codexUserSkillReports.length === 6)
+      .every(toolReport => toolReport.codexUserSkillReports.length === 7)
   );
   assert.ok(
     report.tools.every(toolReport =>

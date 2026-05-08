@@ -51,6 +51,14 @@ export const COMMAND_DEFINITIONS = [
     example: '/am:plan 为设备管理页新增批量分组能力，先输出实施 SOP'
   },
   {
+    key: 'review',
+    slashCommand: '/am:review',
+    title: 'AM 代码 Review',
+    description: '按 Aimin 与阿里风格 review 当前代码，输出问题、优化建议与可改动点',
+    argumentHint: '[review-target]',
+    example: '/am:review 检查当前工作区改动是否符合阿里风格'
+  },
+  {
     key: 'update',
     slashCommand: '/am:update',
     title: 'AM Update',
@@ -74,7 +82,7 @@ export const CODEX_USER_SKILL_DEFINITIONS = [
     skillName: 'am',
     label: '$am',
     type: 'router',
-    description: 'Aimin Codex 路由技能，按上下文选择初始化、接口、计划、升级或会话归档流程',
+    description: 'Aimin Codex 路由技能，按上下文选择初始化、接口、计划、代码 review、升级或会话归档流程',
     example: '$am init 当前 admin 项目，初始化 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 和 .agent/admin'
   },
   ...COMMAND_DEFINITIONS.map(command => ({

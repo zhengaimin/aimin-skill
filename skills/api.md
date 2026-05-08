@@ -1,6 +1,8 @@
-<!-- aimin-skill-version: 0.1.0 -->
+<!-- aimin-skill-version: 0.1.1 -->
 
 # 接口与类型规范（模板 / 可复制）
+
+本文件定义接口命名、类型组织、请求封装与枚举使用规则。公开 API 的注释规范统一参考 `.agent/comment.md`。
 
 本文件是可复制的初始版本：避免写死某个项目的 API 网关、具体业务模块、或外部链接。复制到其他项目时，优先按"0. 项目自定义"统一调整目录与封装名。
 
@@ -42,11 +44,12 @@
 ### 1.4 API 路径常量
 
 - 格式：`[MODULE]_API` 或 `[MODULE]_[FEATURE]_API`
-- 示例：`REFUND_API`、`DEVICES_GROUPS_API`
+- 常量只表达资源名，不混入 `GET` / `POST` 这类动词
+- 示例：`REFUND_API`、`DEVICE_GROUPS_API`
 
 ### 1.5 页面内请求函数
 
-页面中封装 API 调用的函数使用 `axios` 前缀。
+页面中二次封装 API 调用的函数使用 `axios` 前缀，只保留页面层所需的参数整理和调用逻辑。
 
 - 格式：`axios + [HttpMethod] + [Feature] + Api`
 - 示例：
@@ -64,6 +67,7 @@
   - 核心对象：`IxxxVo` / `IxxxDto`（按团队习惯二选一即可，保持一致）
   - 请求参数：`ReqXxxApi`
   - 响应结构：`ResXxxApi`
+- **字段注释**：类型字段按 `.agent/comment.md` 的规则逐项写 `/** */`，不要只在外层补一句总注释。
 
 ### 2.1 新增/更新/删除接口的响应类型规则
 
@@ -77,7 +81,9 @@
 ```ts
 export namespace User {
   export interface IUserVo {
+    /** 用户 ID */
     id: number;
+    /** 用户名 */
     username: string;
   }
 
@@ -93,20 +99,30 @@ export namespace User {
 - **位置**：放在 `src/api/modules/` 下，可按业务模块拆子目录。
 - **命名**：推荐 `getXxxApi` / `postXxxApi` / `putXxxApi` / `deleteXxxApi`（或团队约定的另一套风格，但要一致）。
 - **类型关联**：请求函数应显式声明响应类型，类型来源于 `src/api/interface/**`。
+- **封装边界**：请求函数保持薄封装，只做参数整理和请求调用，不在这里写复杂业务判断。
 - **全局 loading 控制**：`http.get/post/put/delete` 第三个参数可传 `{ loading: false }` 关闭全局 loading；不传默认开启。
 
 示例：`src/api/modules/user/index.ts`
 
 ```ts
 import type { User } from "@/api/interface/modules/user";
-import { http } from "@/api"; // 以项目实际封装为准
+import { http } from "@/api";
 
-export function getUserListApi(params: Record<string, any>) {
-  return http.get<User.ResGetUserListApi>("/users", params); // 默认全局 loading
+/**
+ * 获取用户列表
+ * @param params 查询条件
+ * @returns 用户列表结果
+ */
+export function getUserListApi(params: Record<string, unknown>) {
+  return http.get<User.ResGetUserListApi>("/users", params);
 }
 
-// 不需要全局 loading 的接口
-export function getUserPublicInfoApi(params: Record<string, any>) {
+/**
+ * 获取公开用户信息
+ * @param params 查询条件
+ * @returns 公开用户信息结果
+ */
+export function getUserPublicInfoApi(params: Record<string, unknown>) {
   return http.get<User.ResGetUserListApi>("/users/public-info", params, {
     loading: false
   });
@@ -117,6 +133,8 @@ export function getUserPublicInfoApi(params: Record<string, any>) {
 
 在接口类型定义里，优先使用项目内枚举值类型（而不是 `number/string` + 注释），以提高类型安全与一致性。
 涉及枚举字段时，**必须**按 `.agent/constant.md` 规范抽取常量（Enum/Type/I18N/Options），并在接口类型中引用对应的 `TxxxValue`。
+
+- 枚举值类型要与后端协议保持一致，不在接口层做二次翻译。
 
 ### 4.1 导入枚举值类型
 
@@ -131,7 +149,9 @@ import type { TOrderStatusValue } from "@/config/modules";
 
 export namespace Order {
   export interface IOrderVo {
+    /** 订单 ID */
     id: number;
+    /** 订单状态 */
     status: TOrderStatusValue;
   }
 }

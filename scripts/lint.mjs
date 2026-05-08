@@ -7,6 +7,8 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const errors = [];
 const RULE_VERSION = '0.1.0';
 const MARKDOWN_VERSION_MARKER = `<!-- aimin-skill-version: ${RULE_VERSION} -->`;
+const CORE_RULE_VERSION = '0.1.1';
+const CORE_RULE_VERSION_MARKER = `<!-- aimin-skill-version: ${CORE_RULE_VERSION} -->`;
 const AGENTS_TEMPLATE_VERSION = '0.1.2';
 const AGENTS_TEMPLATE_VERSION_MARKER = `<!-- aimin-skill-version: ${AGENTS_TEMPLATE_VERSION} -->`;
 
@@ -74,6 +76,16 @@ async function validateCommandGuides() {
   assertIncludes(planContent, '交付', 'plan 命令说明缺少交付阶段');
   assertIncludes(planContent, '.agent/scripts/lint.md', 'plan 命令说明缺少 lint 收尾');
 
+  const reviewContent = await readText(path.join(repoRoot, 'commands', 'review.md'));
+  assertIncludes(reviewContent, '/am:review', 'review 命令说明缺少 /am:review');
+  assertIncludes(reviewContent, '阿里风格', 'review 命令说明缺少阿里风格目标');
+  assertIncludes(reviewContent, '默认只输出 review 结果', 'review 命令说明缺少默认只读行为');
+  assertIncludes(reviewContent, 'Findings', 'review 命令说明缺少 Findings 输出格式');
+  assertIncludes(reviewContent, '文件路径和行号', 'review 命令说明缺少定位要求');
+  assertIncludes(reviewContent, '.agent/comment.md', 'review 命令说明缺少 comment 规则引用');
+  assertIncludes(reviewContent, '.agent/naming.md', 'review 命令说明缺少 naming 规则引用');
+  assertIncludes(reviewContent, '.agent/api.md', 'review 命令说明缺少 api 规则引用');
+
   const updateContent = await readText(path.join(repoRoot, 'commands', 'update.md'));
   assertIncludes(updateContent, '/am:update', 'update 命令说明缺少 /am:update');
   assertIncludes(updateContent, '.agent/api.md', 'update 命令说明缺少 api 规则升级目标');
@@ -114,6 +126,7 @@ async function validateProjectTemplates() {
   }
 
   assertIncludes(skillReadmeContent, 'comment.md', 'README 缺少 comment 规则说明');
+  assertIncludes(skillReadmeContent, '/am:review', 'README 缺少 review 命令说明');
   assertIncludes(skillReadmeContent, '/am:session', 'README 缺少 session 命令说明');
   assertIncludes(lintContent, '.agent/index/constants.json', 'lint 模板缺少 constants 索引引用');
   assertIncludes(lintContent, '.agent/index/utils.json', 'lint 模板缺少 utils 索引引用');
@@ -135,6 +148,7 @@ async function validateMarkdownVersions() {
   const relativePaths = [
     'skills/api.md',
     'skills/comment.md',
+    'skills/constant.md',
     'skills/naming.md',
     'skills/template/AGENTS.md',
     'skills/template/scripts/lint.md',
@@ -147,11 +161,19 @@ async function validateMarkdownVersions() {
 
   for (const relativePath of relativePaths) {
     const content = await readText(path.join(repoRoot, relativePath));
-    const versionMarker = relativePath === 'skills/template/AGENTS.md'
-      ? AGENTS_TEMPLATE_VERSION_MARKER
-      : MARKDOWN_VERSION_MARKER;
+    const versionMarker = getMarkdownVersionMarker(relativePath);
     assertIncludes(content, versionMarker, `${relativePath} 缺少版本号`);
   }
+}
+
+function getMarkdownVersionMarker(relativePath) {
+  if (relativePath === 'skills/template/AGENTS.md')
+    return AGENTS_TEMPLATE_VERSION_MARKER;
+
+  if (['skills/api.md', 'skills/comment.md', 'skills/constant.md', 'skills/naming.md'].includes(relativePath))
+    return CORE_RULE_VERSION_MARKER;
+
+  return MARKDOWN_VERSION_MARKER;
 }
 
 async function validateRepoAgents() {

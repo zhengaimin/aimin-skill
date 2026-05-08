@@ -7,6 +7,7 @@
 - 初始化项目内的 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md` 与按项目类型命中的 `admin/tauri/uni` 目录
 - 按版本升级项目内 `.agent/**` 与 `AGENTS.md` 的 `# Aimin-skill` 受管段落
 - 按 Aimin 规范新增接口、类型、枚举
+- 按 Aimin 与阿里风格 review 当前代码，输出问题、优化建议与可改动点
 - 将当前会话中已经确认的信息归档到 `.agent/docs/`
 - 根据项目类型从 `template/admin`、`template/tauri`、`template/uni` 加载补充模板
 
@@ -51,5 +52,6 @@
 | `/am:init` | 初始化 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md`，并按项目类型包含 `admin/tauri/uni` |
 | `/am:api`  | 新增接口、类型与枚举                                |
 | `/am:plan` | 手动触发 AI SOP 计划，聚焦当前项目代码与规则        |
+| `/am:review` | 按 Aimin 与阿里风格 review 当前代码，输出问题与优化建议 |
 | `/am:update` | 按版本升级 `.agent/**`，并只更新 `AGENTS.md` 的 `# Aimin-skill` 段落 |
 | `/am:session` | 提取当前会话信息，并输出到 `.agent/docs/`        |

@@ -1,12 +1,39 @@
-<!-- aimin-skill-version: 0.1.0 -->
+<!-- aimin-skill-version: 0.1.1 -->
 
 # 命名规范
 
 ## 通用命名偏好
 
-- 开发者偏好更简洁的命名：优先短而明确，避免冗长命名链。
+- 命名先表达业务语义，再考虑长度；短而明确即可，不追求缩写。
 - 简洁命名必须可读：禁止无语义缩写（如 `a1`、`tmp2`、`xx`）。
+- 布尔变量、布尔属性统一使用 `is` / `has` / `can` / `should` 前缀。
+- 集合、列表优先用复数、`List` 或 `Items` 结尾，避免单复数混淆。
 - 常见短名/缩写的注释要求统一参考 `.agent/comment.md`。
+
+---
+
+## 极简命名-阿里风格
+
+- `props`、变量、函数、常量、目录、文件均优先使用最短业务语义命名。
+- 能用 1 个词表达就不用 2 个词，能用 2 个词表达就不用 3 个词。
+- 禁止为了显得完整而堆叠弱语义词：`data`、`info`、`config`、`params`、`value`、`list`、`item`、`manager`、`handler`，除非去掉后会丢失业务含义。
+- 禁止重复上下文：文件在 `user/` 目录内时，不要再命名为 `user-info-config.ts`。
+- 代码标识符使用 `camelCase`，如 `userId`、`activeUserId`、`handleSubmit`、`getUserList`。
+- 常量使用 `UPPERCASE_SNAKE_CASE`，如 `USER_STATUS`、`DEFAULT_PAGE_SIZE`、`SEARCH_OPTIONS`。
+- 目录和普通文件使用 `kebab-case`，如 `order-detail/`、`format-user.ts`、`use-user.ts`。
+- Vue / React 组件文件使用 `PascalCase`，如 `UserForm.vue`、`OrderDetail.tsx`。
+- Hook 文件使用 `kebab-case`，导出函数使用 `useXxx`，如 `use-order-detail.ts` 导出 `useOrderDetail`。
+- React props 类型使用 `T + 组件名 + Props`，如 `TUserFormProps`、`TOrderDetailProps`。
+- Vue 事件名使用 `kebab-case`，React 事件 props 使用 `onXxx`，组件内部事件处理函数统一使用 `handleXxx`。
+- 事件函数保留 `handle` 前缀，但去掉多余事件词：优先 `handleSubmit`，不要 `handleSubmitClick`。
+- 常量保留既有后缀规范，如 `_I18N`、`_OPTIONS`、`_CONFIGS`，但主体名称必须极简。
+
+---
+
+## 组合式函数命名
+
+- 组合式函数 / Hook 统一使用 `useXxx`。
+- `Xxx` 要直接表达职责，不要写 `useCommon`、`useUtils` 这类空壳命名。
 
 ---
 

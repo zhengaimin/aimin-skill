@@ -1,4 +1,8 @@
+<!-- aimin-skill-version: 0.1.1 -->
+
 # 常量与枚举规范
+
+本文件定义业务枚举、类型值、文案映射与选项数组的组织方式。公共导出与字段注释统一参考 `.agent/comment.md`。
 
 本文件是可复用的通用规范，复制到其他项目时只需修改"项目配置"中的路径。
 
@@ -29,7 +33,7 @@ src/constants/modules/
 | 类型     | 命名                        | 示例                      |
 | -------- | --------------------------- | ------------------------- |
 | 枚举     | `UPPER_SNAKE_CASE`          | `USER_TYPE`, `CALL_TYPE`  |
-| 枚举值   | `UPPER_CASE` 或 `camelCase` | `STUDENT`, `video`, `SIP` |
+| 枚举值   | 保持后端协议值；前端自定义时保持全项目一致 | `STUDENT`, `video`, `SIP` |
 | 类型值   | `T{ENUM}_VALUE`             | `TUSER_TYPE_VALUE`        |
 | 中文文案 | `{ENUM}_I18N`               | `USER_TYPE_I18N`          |
 | 选项数组 | `{ENUM}_OPTIONS`            | `USER_TYPE_OPTIONS`       |
@@ -47,6 +51,9 @@ src/constants/modules/
 | **后端协议**   | 字段值与后端一致，不可修改 |
 | **前端自定义** | 业务逻辑需要，自行定义     |
 
+- 同一枚举内的值风格必须统一，不要混用大小写规则。
+- 枚举值一旦进入接口层，就不要在类型定义里做二次改写。
+
 ## 6. I18N 文案规则
 
 ```typescript
@@ -60,6 +67,7 @@ export const USER_TYPE_I18N: Record<TUSER_TYPE_VALUE, string> = {
 - 中文优先，用于界面展示
 - 协议标识类保持英文
 - 按后端接口文档定义文本
+- `Record<T{ENUM_NAME}_VALUE, string>` 必须覆盖所有枚举值，避免漏映射。
 
 ## 7. 模板
 

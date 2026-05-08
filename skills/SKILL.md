@@ -1,16 +1,17 @@
 ---
 name: aimin-skill
-description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 与按项目类型命中的 admin/tauri/uni 目录、加载规则并新增接口，或将当前会话归档到 .agent/docs
+description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 与按项目类型命中的 admin/tauri/uni 目录、加载规则并新增接口、review 代码，或将当前会话归档到 .agent/docs
 ---
 
 # Aimin Skill
 
 ## Use When
 
-- 用户明确提到 `aimin-skill`、`am:init`、`am:api`、`am:plan`、`am:update`、`am:session`
+- 用户明确提到 `aimin-skill`、`am:init`、`am:api`、`am:plan`、`am:review`、`am:update`、`am:session`
 - 需要初始化项目内的 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md` 与按项目类型命中的 `.agent/admin/**`、`.agent/tauri/**`、`.agent/uni/**`
 - 需要按版本升级项目内的 `.agent/**` 与 `AGENTS.md` 的 `# Aimin-skill` 受管段落
 - 需要按 Aimin 规范新增接口、类型、常量或项目类型规则
+- 需要按 Aimin 与阿里风格 review 当前代码，输出问题、优化建议与可改动点
 - 需要提取当前会话信息，并输出到项目 `.agent/docs/` 目录
 
 ## Workflow
@@ -18,7 +19,8 @@ description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.a
 1. 先读 `README.md` 了解当前 skill 包结构
 2. 如果任务是初始化项目，优先读 `template/AGENTS.md`、`template/CLAUDE.md`、`api.md`、`comment.md`、`naming.md`、`template/index/constants.json`、`template/index/utils.json`、`template/scripts/lint.md`，再按项目类型按需读 `template/admin/rules.md`、`template/admin/table.md`、`template/admin/modal.md`、`template/tauri/rules.md`、`template/uni/rules.md`
 3. 如果任务是新增接口，优先读项目侧 `.agent/index/constants.json`、`.agent/index/utils.json`；如果项目里额外存在 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`，再按需读取；缺失时回退到安装包内的 `api.md`、`constant.md`、`comment.md`、`naming.md`
-4. 仅在命中对应场景时按需加载：
+4. 如果任务是 review 代码，优先读项目侧 `AGENTS.md`、`CLAUDE.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/api.md`、`.agent/index/constants.json`、`.agent/index/utils.json`，再按 review 范围读取代码；缺失时回退到安装包内规则
+5. 仅在命中对应场景时按需加载：
    - `comment.md`
    - `naming.md`
    - `constant.md`
@@ -33,14 +35,15 @@ description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.a
    - `template/admin/modal.md`
    - `template/tauri/rules.md`
    - `template/uni/rules.md`
-5. 先检查当前项目代码与目录，再判断项目类型和技术栈
-6. 项目侧默认维护 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md`，以及按项目类型命中的 `.agent/admin/**`、`.agent/tauri/**`、`.agent/uni/**` 中一组
-7. `/am:init` 只创建根目录 `AGENTS.md`、`CLAUDE.md` 与最小 `.agent/**` 规则集，不创建或修改 `.gitignore`
-8. 禁止因为技术栈识别而额外生成 `.agent/constant.md`、`.agent/vue.md`、`.agent/unocss.md`；`admin`、`tauri`、`uni` 最多命中一组
-9. 初始化时检查受管 `.agent/**` 文件版本；目标缺少版本号或版本不一致时，按参考文件强制更新
-10. 更新 `AGENTS.md`、`CLAUDE.md` 时只替换 `# Aimin-skill` 受管段落，不改项目独有规则
-11. `/am:update` 只升级 `.agent/**` 与 `AGENTS.md`，不更新 `CLAUDE.md`
-12. `/am:session` 只创建或更新 `.agent/docs/*.md`，不要顺带初始化规则文件或进入代码实现
+6. 先检查当前项目代码与目录，再判断项目类型和技术栈
+7. 项目侧默认维护 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md`，以及按项目类型命中的 `.agent/admin/**`、`.agent/tauri/**`、`.agent/uni/**` 中一组
+8. `/am:init` 只创建根目录 `AGENTS.md`、`CLAUDE.md` 与最小 `.agent/**` 规则集，不创建或修改 `.gitignore`
+9. 禁止因为技术栈识别而额外生成 `.agent/constant.md`、`.agent/vue.md`、`.agent/unocss.md`；`admin`、`tauri`、`uni` 最多命中一组
+10. 初始化时检查受管 `.agent/**` 文件版本；目标缺少版本号或版本不一致时，按参考文件强制更新
+11. 更新 `AGENTS.md`、`CLAUDE.md` 时只替换 `# Aimin-skill` 受管段落，不改项目独有规则
+12. `/am:review` 默认只输出 review 结果，不直接修改文件；只有用户明确要求修复时才进入修改流程
+13. `/am:update` 只升级 `.agent/**` 与 `AGENTS.md`，不更新 `CLAUDE.md`
+14. `/am:session` 只创建或更新 `.agent/docs/*.md`，不要顺带初始化规则文件或进入代码实现
 
 ## Constraints
 
