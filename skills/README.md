@@ -1,3 +1,5 @@
+<!-- aimin-skill-version: 0.1.0 -->
+
 # aimin-skill 规则总览
 
 这个目录会被复制到本地 `am` plugin 的 `references/` 目录，作为命令运行时的参考资料。
@@ -7,6 +9,8 @@
 - 初始化项目内的 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md` 与按项目类型命中的 `admin/tauri/uni` 目录
 - 按版本升级项目内 `.agent/**` 与 `AGENTS.md` 的 `# Aimin-skill` 受管段落
 - 按 Aimin 规范新增接口、类型、枚举
+- 根据产品 prompt 在 `.agent/ui/{feature-name}/` 下生成需求文档包
+- 根据 `.agent/ui/{feature-name}/` 需求文档生成 Pencil UI 设计稿
 - 按 Aimin 与阿里风格 review 当前代码，输出问题、优化建议与可改动点
 - 将当前会话中已经确认的信息归档到 `.agent/docs/`
 - 根据项目类型从 `template/admin`、`template/tauri`、`template/uni` 加载补充模板
@@ -51,6 +55,8 @@
 | ---------- | --------------------------------------------------- |
 | `/am:init` | 初始化 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md`，并按项目类型包含 `admin/tauri/uni` |
 | `/am:api`  | 新增接口、类型与枚举                                |
+| `/am:requirement` | 根据产品 prompt 生成 `.agent/ui/{feature-name}/` 需求文档包 |
+| `/am:design` | 根据 `.agent/ui/{feature-name}/` 需求文档生成 Pencil UI 设计稿 |
 | `/am:plan` | 手动触发 AI SOP 计划，聚焦当前项目代码与规则        |
 | `/am:review` | 按 Aimin 与阿里风格 review 当前代码，输出问题与优化建议 |
 | `/am:update` | 按版本升级 `.agent/**`，并只更新 `AGENTS.md` 的 `# Aimin-skill` 段落 |

@@ -43,6 +43,22 @@ export const COMMAND_DEFINITIONS = [
     example: '/am:api 设备分组列表查询接口，包含状态枚举'
   },
   {
+    key: 'requirement',
+    slashCommand: '/am:requirement',
+    title: 'AM 需求',
+    description: '根据产品 prompt 生成 .agent/ui 需求文档包',
+    argumentHint: '[product-prompt]',
+    example: '/am:requirement 设计一个面向独立音乐人的移动端音乐 App'
+  },
+  {
+    key: 'design',
+    slashCommand: '/am:design',
+    title: 'AM 设计',
+    description: '根据 .agent/ui 需求文档使用 Pencil 生成 UI 设计稿',
+    argumentHint: '[feature-name]',
+    example: '/am:design music-app design-source=codex'
+  },
+  {
     key: 'plan',
     slashCommand: '/am:plan',
     title: 'AM 计划',
@@ -82,7 +98,7 @@ export const CODEX_USER_SKILL_DEFINITIONS = [
     skillName: 'am',
     label: '$am',
     type: 'router',
-    description: 'Aimin Codex 路由技能，按上下文选择初始化、接口、计划、代码 review、升级或会话归档流程',
+    description: 'Aimin Codex 路由技能，按上下文选择初始化、接口、需求、设计、计划、代码 review、升级或会话归档流程',
     example: '$am init 当前 admin 项目，初始化 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 和 .agent/admin'
   },
   ...COMMAND_DEFINITIONS.map(command => ({

@@ -203,6 +203,14 @@ test('init installs local marketplace bundle and registers both tools', async ()
     homeDir,
     '.aimin-skill-marketplace/plugins/am/commands/update.md'
   );
+  const requirementCommand = await readInstalledFile(
+    homeDir,
+    '.aimin-skill-marketplace/plugins/am/commands/requirement.md'
+  );
+  const designCommand = await readInstalledFile(
+    homeDir,
+    '.aimin-skill-marketplace/plugins/am/commands/design.md'
+  );
   const planSkill = await readInstalledFile(
     homeDir,
     '.aimin-skill-marketplace/plugins/am/skills/plan/SKILL.md'
@@ -230,6 +238,14 @@ test('init installs local marketplace bundle and registers both tools', async ()
   const codexInitSkill = await readInstalledFile(
     homeDir,
     '.codex/skills/am-init/SKILL.md'
+  );
+  const codexRequirementSkill = await readInstalledFile(
+    homeDir,
+    '.codex/skills/am-requirement/SKILL.md'
+  );
+  const codexDesignSkill = await readInstalledFile(
+    homeDir,
+    '.codex/skills/am-design/SKILL.md'
   );
   const codexUpdateSkill = await readInstalledFile(
     homeDir,
@@ -331,6 +347,19 @@ test('init installs local marketplace bundle and registers both tools', async ()
   assert.match(updateCommand, /强制覆盖/);
   assert.match(updateCommand, /只更新 `# Aimin-skill`/);
   assert.match(updateCommand, /不更新 `CLAUDE\.md`/);
+  assert.match(requirementCommand, /^# \/am:requirement$/m);
+  assert.match(requirementCommand, /\.agent\/ui\/\{feature-name\}\//);
+  assert.match(requirementCommand, /需求分析\.md/);
+  assert.match(requirementCommand, /线框图\.md/);
+  assert.match(requirementCommand, /设计说明\.md/);
+  assert.match(requirementCommand, /开发说明\.md/);
+  assert.match(requirementCommand, /验收标准\.md/);
+  assert.match(requirementCommand, /不生成 Pencil 设计稿/);
+  assert.match(designCommand, /^# \/am:design$/m);
+  assert.match(designCommand, /\.agent\/ui\/\{feature-name\}\/\{design-source\}\//);
+  assert.match(designCommand, /Pencil/);
+  assert.match(designCommand, /Remix Icon/);
+  assert.match(designCommand, /不要跳过需求阶段直接根据一句话想法设计/);
   assert.match(planSkill, /name: plan/);
   assert.match(planSkill, /调研/);
   assert.doesNotMatch(planSkill, /(git|远端|分支|冲突)/);
@@ -350,11 +379,19 @@ test('init installs local marketplace bundle and registers both tools', async ()
   assert.match(sessionSkill, /Markdown 表格/);
   assert.match(codexRouterSkill, /name: am/);
   assert.match(codexRouterSkill, /\$am-init/);
+  assert.match(codexRouterSkill, /\$am-requirement/);
+  assert.match(codexRouterSkill, /\$am-design/);
   assert.match(codexRouterSkill, /\$am-review/);
   assert.match(codexRouterSkill, /\$am-update/);
   assert.match(codexRouterSkill, /\$am-session/);
   assert.match(codexInitSkill, /name: am-init/);
   assert.match(codexInitSkill, /用户通过 `\$am-init` 主动调用本 skill/);
+  assert.match(codexRequirementSkill, /name: am-requirement/);
+  assert.match(codexRequirementSkill, /用户通过 `\$am-requirement` 主动调用本 skill/);
+  assert.match(codexRequirementSkill, /\.agent\/ui\/\{feature-name\}\//);
+  assert.match(codexDesignSkill, /name: am-design/);
+  assert.match(codexDesignSkill, /用户通过 `\$am-design` 主动调用本 skill/);
+  assert.match(codexDesignSkill, /Pencil/);
   assert.match(codexUpdateSkill, /name: am-update/);
   assert.match(codexUpdateSkill, /用户通过 `\$am-update` 主动调用本 skill/);
   assert.match(codexReviewSkill, /name: am-review/);
@@ -441,11 +478,11 @@ test('init is idempotent and doctor reports ready after install', async () => {
   assert.equal(report.tools.length, 2);
   assert.ok(report.tools.every(toolReport => toolReport.status === 'ready'));
   assert.ok(report.tools.every(toolReport => toolReport.bundleStatus === 'ready'));
-  assert.ok(report.tools.every(toolReport => toolReport.commandReports.length === 6));
+  assert.ok(report.tools.every(toolReport => toolReport.commandReports.length === 8));
   assert.ok(
     report.tools
       .filter(toolReport => toolReport.tool.key === 'codex')
-      .every(toolReport => toolReport.codexUserSkillReports.length === 7)
+      .every(toolReport => toolReport.codexUserSkillReports.length === 9)
   );
   assert.ok(
     report.tools.every(toolReport =>

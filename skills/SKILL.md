@@ -1,16 +1,20 @@
 ---
 name: aimin-skill
-description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 与按项目类型命中的 admin/tauri/uni 目录、加载规则并新增接口、review 代码，或将当前会话归档到 .agent/docs
+description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 与按项目类型命中的 admin/tauri/uni 目录、加载规则并新增接口、生成 .agent/ui 需求与设计产物、review 代码，或将当前会话归档到 .agent/docs
 ---
+
+<!-- aimin-skill-version: 0.1.0 -->
 
 # Aimin Skill
 
 ## Use When
 
-- 用户明确提到 `aimin-skill`、`am:init`、`am:api`、`am:plan`、`am:review`、`am:update`、`am:session`
+- 用户明确提到 `aimin-skill`、`am:init`、`am:api`、`am:requirement`、`am:design`、`am:plan`、`am:review`、`am:update`、`am:session`
 - 需要初始化项目内的 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md` 与按项目类型命中的 `.agent/admin/**`、`.agent/tauri/**`、`.agent/uni/**`
 - 需要按版本升级项目内的 `.agent/**` 与 `AGENTS.md` 的 `# Aimin-skill` 受管段落
 - 需要按 Aimin 规范新增接口、类型、常量或项目类型规则
+- 需要根据产品 prompt 在 `.agent/ui/{feature-name}/` 下生成需求文档包
+- 需要根据 `.agent/ui/{feature-name}/` 需求文档生成 Pencil UI 设计稿
 - 需要按 Aimin 与阿里风格 review 当前代码，输出问题、优化建议与可改动点
 - 需要提取当前会话信息，并输出到项目 `.agent/docs/` 目录
 
@@ -20,7 +24,9 @@ description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.a
 2. 如果任务是初始化项目，优先读 `template/AGENTS.md`、`template/CLAUDE.md`、`api.md`、`comment.md`、`naming.md`、`template/index/constants.json`、`template/index/utils.json`、`template/scripts/lint.md`，再按项目类型按需读 `template/admin/rules.md`、`template/admin/table.md`、`template/admin/modal.md`、`template/tauri/rules.md`、`template/uni/rules.md`
 3. 如果任务是新增接口，优先读项目侧 `.agent/index/constants.json`、`.agent/index/utils.json`；如果项目里额外存在 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`，再按需读取；缺失时回退到安装包内的 `api.md`、`constant.md`、`comment.md`、`naming.md`
 4. 如果任务是 review 代码，优先读项目侧 `AGENTS.md`、`CLAUDE.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/api.md`、`.agent/index/constants.json`、`.agent/index/utils.json`，再按 review 范围读取代码；缺失时回退到安装包内规则
-5. 仅在命中对应场景时按需加载：
+5. 如果任务是生成需求，先检查 `.agent/ui/` 是否已有同名功能目录，再按 `.agent/ui/{feature-name}/` 输出 `需求分析.md`、`线框图.md`、`设计说明.md`、`开发说明.md`、`验收标准.md`
+6. 如果任务是生成设计，先读取 `.agent/ui/{feature-name}/` 下的需求文档，再把 Pencil 设计稿输出到 `.agent/ui/{feature-name}/{design-source}/`
+7. 仅在命中对应场景时按需加载：
    - `comment.md`
    - `naming.md`
    - `constant.md`
@@ -35,15 +41,17 @@ description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.a
    - `template/admin/modal.md`
    - `template/tauri/rules.md`
    - `template/uni/rules.md`
-6. 先检查当前项目代码与目录，再判断项目类型和技术栈
-7. 项目侧默认维护 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md`，以及按项目类型命中的 `.agent/admin/**`、`.agent/tauri/**`、`.agent/uni/**` 中一组
-8. `/am:init` 只创建根目录 `AGENTS.md`、`CLAUDE.md` 与最小 `.agent/**` 规则集，不创建或修改 `.gitignore`
-9. 禁止因为技术栈识别而额外生成 `.agent/constant.md`、`.agent/vue.md`、`.agent/unocss.md`；`admin`、`tauri`、`uni` 最多命中一组
-10. 初始化时检查受管 `.agent/**` 文件版本；目标缺少版本号或版本不一致时，按参考文件强制更新
-11. 更新 `AGENTS.md`、`CLAUDE.md` 时只替换 `# Aimin-skill` 受管段落，不改项目独有规则
-12. `/am:review` 默认只输出 review 结果，不直接修改文件；只有用户明确要求修复时才进入修改流程
-13. `/am:update` 只升级 `.agent/**` 与 `AGENTS.md`，不更新 `CLAUDE.md`
-14. `/am:session` 只创建或更新 `.agent/docs/*.md`，不要顺带初始化规则文件或进入代码实现
+8. 先检查当前项目代码与目录，再判断项目类型和技术栈
+9. 项目侧默认维护 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md`，以及按项目类型命中的 `.agent/admin/**`、`.agent/tauri/**`、`.agent/uni/**` 中一组
+10. `/am:init` 只创建根目录 `AGENTS.md`、`CLAUDE.md` 与最小 `.agent/**` 规则集，不创建或修改 `.gitignore`
+11. 禁止因为技术栈识别而额外生成 `.agent/constant.md`、`.agent/vue.md`、`.agent/unocss.md`；`admin`、`tauri`、`uni` 最多命中一组
+12. 初始化时检查受管 `.agent/**` 文件版本；目标缺少版本号或版本不一致时，按参考文件强制更新
+13. 更新 `AGENTS.md`、`CLAUDE.md` 时只替换 `# Aimin-skill` 受管段落，不改项目独有规则
+14. `/am:requirement` 只创建或更新 `.agent/ui/{feature-name}/` 下的需求文档包，不生成设计稿或代码
+15. `/am:design` 只根据 `.agent/ui/{feature-name}/` 需求文档生成 Pencil 设计产物，不补业务规则或写前端代码
+16. `/am:review` 默认只输出 review 结果，不直接修改文件；只有用户明确要求修复时才进入修改流程
+17. `/am:update` 只升级 `.agent/**` 与 `AGENTS.md`，不更新 `CLAUDE.md`
+18. `/am:session` 只创建或更新 `.agent/docs/*.md`，不要顺带初始化规则文件或进入代码实现
 
 ## Constraints
 

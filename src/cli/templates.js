@@ -110,9 +110,11 @@ export function buildCodexRouterSkillBody(options) {
 ## 路由规则
 
 1. 先检查当前仓库，再读取用户当前消息。
-2. 将任务路由到以下六类之一：
+2. 将任务路由到以下八类之一：
    - 初始化项目根文档、api/comment/naming 规则、索引、lint 脚本和技术栈目录：按 \`$am-init\` 的流程执行
    - 新增或更新接口、类型、枚举：按 \`$am-api\` 的流程执行
+   - 根据产品 prompt 生成 \`.agent/ui/{feature-name}/\` 需求文档包：按 \`$am-requirement\` 的流程执行
+   - 根据 \`.agent/ui/{feature-name}/\` 需求文档生成 Pencil UI 设计稿：按 \`$am-design\` 的流程执行
    - 输出 AI SOP 计划：按 \`$am-plan\` 的流程执行
    - 按 Aimin 与阿里风格 review 当前代码：按 \`$am-review\` 的流程执行
    - 升级项目侧 \`.agent/**\` 与 \`AGENTS.md\`：按 \`$am-update\` 的流程执行
@@ -122,9 +124,11 @@ export function buildCodexRouterSkillBody(options) {
 5. 如果用户消息里已经明确出现 review、代码审查、代码评审、阿里风格检查、优化建议、改动建议，直接走 review 流程。
 6. 如果用户消息里已经明确出现 init、初始化、AGENTS.md、CLAUDE.md、api.md、comment.md、naming.md、index、constants、utils、lint.md、admin、tauri、uni，直接走初始化流程。
 7. 如果用户消息里已经明确出现 api、接口、type、类型、enum、枚举，直接走接口流程。
-8. 如果用户消息里已经明确出现 plan、计划、SOP、调研、拆任务，直接走计划流程。
-9. 如果仍然无法判断，用一句话要求用户补充目标，并提示可用入口：\`$am-init\`、\`$am-api\`、\`$am-plan\`、\`$am-review\`、\`$am-update\`、\`$am-session\`。
-10. 路由完成后，直接按对应流程落地，不要只停留在“建议使用哪个 skill”。
+8. 如果用户消息里已经明确出现 design、设计、UI、Pencil、界面设计、设计稿，并且提到需求文档、\`.agent/ui\` 或功能目录，直接走设计生成流程。
+9. 如果用户消息里已经明确出现 requirement、需求生成、PRD、产品想法、prompt、需求文档、需求分析，直接走需求生成流程。
+10. 如果用户消息里已经明确出现 plan、计划、SOP、调研、拆任务，直接走计划流程。
+11. 如果仍然无法判断，用一句话要求用户补充目标，并提示可用入口：\`$am-init\`、\`$am-api\`、\`$am-requirement\`、\`$am-design\`、\`$am-plan\`、\`$am-review\`、\`$am-update\`、\`$am-session\`。
+12. 路由完成后，直接按对应流程落地，不要只停留在“建议使用哪个 skill”。
 
 ## 已安装参考
 
@@ -138,6 +142,14 @@ ${commandGuideMap.init}
 ## 接口流程摘要
 
 ${commandGuideMap.api}
+
+## 需求生成流程摘要
+
+${commandGuideMap.requirement}
+
+## 设计生成流程摘要
+
+${commandGuideMap.design}
 
 ## 计划流程摘要
 
@@ -159,6 +171,8 @@ ${commandGuideMap.session}
 
 \`\`\`
 $am init 当前 admin 项目，初始化 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 和 .agent/admin
+$am-requirement 设计一个面向独立音乐人的移动端音乐 App
+$am-design music-app design-source=codex
 $am-review 检查当前工作区改动是否符合阿里风格
 $am-update 升级当前项目 .agent 与 AGENTS.md
 $am-session 归档当前会话
@@ -201,6 +215,8 @@ function buildPromptBody(options) {
 
   if (command.key === 'init') return buildInitPromptBody(options);
   if (command.key === 'api') return buildApiPromptBody(options);
+  if (command.key === 'requirement') return buildRequirementPromptBody(options);
+  if (command.key === 'design') return buildDesignPromptBody(options);
   if (command.key === 'update') return buildUpdatePromptBody(options);
   if (command.key === 'plan') return buildPlanPromptBody(options);
   if (command.key === 'review') return buildReviewPromptBody(options);
@@ -340,6 +356,104 @@ function buildApiPromptBody(options) {
 - 接口规范：\`${apiPath}\`
 - 常量索引模板：\`${constantsIndexPath}\`
 - 公共方法索引模板：\`${utilsIndexPath}\`
+
+## 命令说明
+
+${commandGuide}
+
+## 示例
+
+\`\`\`
+${command.example}
+\`\`\`
+`;
+}
+
+/**
+ * 生成 requirement 主体
+ * @param {object} options 生成参数
+ * @param {string} options.commandGuide 命令说明
+ * @param {string} options.referenceDir 已安装参考目录
+ * @param {object} options.command 命令定义
+ * @returns {string}
+ */
+function buildRequirementPromptBody(options) {
+  const { commandGuide, referenceDir, command } = options;
+  const heading = getPromptHeading(options.surfaceType, command);
+  const skillEntryPath = getReferencePath(referenceDir, 'SKILL.md');
+  const readmePath = getReferencePath(referenceDir, 'README.md');
+
+  return `# ${heading}
+
+用户调用命令参数：$ARGUMENTS
+
+## 执行要求
+
+1. 这个命令是显式触发命令，只有用户主动调用 \`${command.slashCommand}\` 时才生效
+2. 先阅读主 skill 入口：\`${skillEntryPath}\`
+3. 先检查当前项目目录，确认是否已有 \`.agent/ui/\`、相关需求文档或同名功能目录
+4. 将 $ARGUMENTS 当成产品想法、prompt、范围约束和目录提示来源
+5. 默认把需求包输出到 \`.agent/ui/{feature-name}/\`；如果用户明确指定目录，优先使用用户指定目录
+6. 如果 \`.agent/\` 不存在，只创建 \`.agent/ui/{feature-name}/\`，不要顺带初始化 \`AGENTS.md\`、\`CLAUDE.md\` 或其它 \`.agent/**\` 规则文件
+7. 必须生成或更新 \`需求分析.md\`、\`线框图.md\`、\`设计说明.md\`、\`开发说明.md\`、\`验收标准.md\`
+8. 信息不足时，优先提出最多 3 个关键澄清问题；如果用户要求快速推进，则写明保守假设后继续
+9. 只生成需求文档，不生成 Pencil 设计稿，不写前端代码，不修改业务源码
+10. 先检查真实项目目录，再把 $ARGUMENTS 当成补充上下文
+
+## 已安装参考
+
+- 主入口：\`${skillEntryPath}\`
+- 规则总览：\`${readmePath}\`
+
+## 命令说明
+
+${commandGuide}
+
+## 示例
+
+\`\`\`
+${command.example}
+\`\`\`
+`;
+}
+
+/**
+ * 生成 design 主体
+ * @param {object} options 生成参数
+ * @param {string} options.commandGuide 命令说明
+ * @param {string} options.referenceDir 已安装参考目录
+ * @param {object} options.command 命令定义
+ * @returns {string}
+ */
+function buildDesignPromptBody(options) {
+  const { commandGuide, referenceDir, command } = options;
+  const heading = getPromptHeading(options.surfaceType, command);
+  const skillEntryPath = getReferencePath(referenceDir, 'SKILL.md');
+  const readmePath = getReferencePath(referenceDir, 'README.md');
+
+  return `# ${heading}
+
+用户调用命令参数：$ARGUMENTS
+
+## 执行要求
+
+1. 这个命令是显式触发命令，只有用户主动调用 \`${command.slashCommand}\` 时才生效
+2. 先阅读主 skill 入口：\`${skillEntryPath}\`
+3. 先检查当前项目目录，定位用户指定的 \`.agent/ui/{feature-name}/\` 需求包目录
+4. 需求包必须包含 \`需求分析.md\`、\`线框图.md\`、\`设计说明.md\`、\`验收标准.md\`；建议同时读取 \`开发说明.md\`
+5. 如果需求文档缺失，停止执行并列出缺失文件；不要跳过需求阶段直接根据一句话想法设计
+6. 默认把设计产物输出到 \`.agent/ui/{feature-name}/{design-source}/\`，其中 \`{design-source}\` 默认为 \`codex\`
+7. 使用 Pencil 创建或更新 \`{design-source}.pen\`，并维护 \`images/\`、\`svg/\`、\`preview/\`
+8. 只根据已有需求文档设计，不补业务规则，不写前端代码，不初始化其它 \`.agent/**\` 规则文件
+9. 图标优先使用 Remix Icon；不要用文本符号、临时形状或手绘几何图形假装正式图标
+10. Pencil 工具、图标库或资源来源不可用时，先停止并说明阻塞，不要用替代符号糊弄产物
+11. 设计完成后对照 \`验收标准.md\` 自查页面齐全度、主流程闭环、状态覆盖、组件一致性、文案一致性和明显对齐/溢出/遮挡问题
+12. 先检查真实项目目录，再把 $ARGUMENTS 当成补充上下文
+
+## 已安装参考
+
+- 主入口：\`${skillEntryPath}\`
+- 规则总览：\`${readmePath}\`
 
 ## 命令说明
 

@@ -81,9 +81,9 @@ async function runInitCommand(options) {
     writeLine(options.stdout, `- ${item.tool.label}: ${item.marketplaceStatus}`);
     writeLine(options.stdout, `  plugin: ${item.pluginStatus}`);
     if (item.tool.key === 'claude')
-      writeLine(options.stdout, '  commands: /am:init, /am:api, /am:plan, /am:review, /am:update, /am:session');
+      writeLine(options.stdout, '  commands: /am:init, /am:api, /am:requirement, /am:design, /am:plan, /am:review, /am:update, /am:session');
     else
-      writeLine(options.stdout, '  skills: $am, $am-init, $am-api, $am-plan, $am-review, $am-update, $am-session');
+      writeLine(options.stdout, '  skills: $am, $am-init, $am-api, $am-requirement, $am-design, $am-plan, $am-review, $am-update, $am-session');
   }
 
   return 0;

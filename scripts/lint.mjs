@@ -61,6 +61,27 @@ async function validateCommandGuides() {
   const apiContent = await readText(path.join(repoRoot, 'commands', 'api.md'));
   assertIncludes(apiContent, '/am:api', 'api 命令说明缺少 /am:api');
 
+  const requirementContent = await readText(path.join(repoRoot, 'commands', 'requirement.md'));
+  assertIncludes(requirementContent, '/am:requirement', 'requirement 命令说明缺少 /am:requirement');
+  assertIncludes(requirementContent, '.agent/ui/{feature-name}/', 'requirement 命令说明缺少 .agent/ui 输出目录');
+  assertIncludes(requirementContent, '需求分析.md', 'requirement 命令说明缺少需求分析文档');
+  assertIncludes(requirementContent, '线框图.md', 'requirement 命令说明缺少线框文档');
+  assertIncludes(requirementContent, '设计说明.md', 'requirement 命令说明缺少设计说明文档');
+  assertIncludes(requirementContent, '开发说明.md', 'requirement 命令说明缺少开发说明文档');
+  assertIncludes(requirementContent, '验收标准.md', 'requirement 命令说明缺少验收标准文档');
+  assertIncludes(requirementContent, '不生成 Pencil 设计稿', 'requirement 命令说明缺少设计边界');
+
+  const designContent = await readText(path.join(repoRoot, 'commands', 'design.md'));
+  assertIncludes(designContent, '/am:design', 'design 命令说明缺少 /am:design');
+  assertIncludes(designContent, '.agent/ui/{feature-name}/{design-source}/', 'design 命令说明缺少设计产物目录');
+  assertIncludes(designContent, 'Pencil', 'design 命令说明缺少 Pencil 要求');
+  assertIncludes(designContent, 'Remix Icon', 'design 命令说明缺少 Remix Icon 要求');
+  assertIncludes(designContent, '需求分析.md', 'design 命令说明缺少需求文档输入');
+  assertIncludes(designContent, '线框图.md', 'design 命令说明缺少线框文档输入');
+  assertIncludes(designContent, '设计说明.md', 'design 命令说明缺少设计说明输入');
+  assertIncludes(designContent, '验收标准.md', 'design 命令说明缺少验收标准输入');
+  assertIncludes(designContent, '不要基于一句话想法直接跳过需求阶段', 'design 命令说明缺少需求阶段边界');
+
   const planContent = await readText(path.join(repoRoot, 'commands', 'plan.md'));
   assertIncludes(planContent, '/am:plan', 'plan 命令说明缺少 /am:plan');
   assertIncludes(planContent, '手动触发', 'plan 命令说明缺少手动触发表述');
@@ -106,6 +127,7 @@ async function validateCommandGuides() {
 }
 
 async function validateProjectTemplates() {
+  const skillEntryContent = await readText(path.join(repoRoot, 'skills', 'SKILL.md'));
   const agentsContent = await readText(path.join(repoRoot, 'skills', 'template', 'AGENTS.md'));
   const claudeContent = await readText(path.join(repoRoot, 'skills', 'template', 'CLAUDE.md'));
   const skillReadmeContent = await readText(path.join(repoRoot, 'skills', 'README.md'));
@@ -125,7 +147,14 @@ async function validateProjectTemplates() {
     assertIncludes(content, '具体范围、格式和边界以 `.agent/comment.md` 为准', '渐进式模板缺少 comment 规则引用');
   }
 
+  assertIncludes(skillEntryContent, MARKDOWN_VERSION_MARKER, 'skill 入口缺少版本号');
+  assertIncludes(skillEntryContent, 'am:requirement', 'skill 入口缺少 requirement 命令说明');
+  assertIncludes(skillEntryContent, 'am:design', 'skill 入口缺少 design 命令说明');
+  assertIncludes(skillEntryContent, '.agent/ui/{feature-name}/', 'skill 入口缺少 .agent/ui 需求目录说明');
   assertIncludes(skillReadmeContent, 'comment.md', 'README 缺少 comment 规则说明');
+  assertIncludes(skillReadmeContent, MARKDOWN_VERSION_MARKER, 'README 缺少版本号');
+  assertIncludes(skillReadmeContent, '/am:requirement', 'README 缺少 requirement 命令说明');
+  assertIncludes(skillReadmeContent, '/am:design', 'README 缺少 design 命令说明');
   assertIncludes(skillReadmeContent, '/am:review', 'README 缺少 review 命令说明');
   assertIncludes(skillReadmeContent, '/am:session', 'README 缺少 session 命令说明');
   assertIncludes(lintContent, '.agent/index/constants.json', 'lint 模板缺少 constants 索引引用');
@@ -146,6 +175,8 @@ async function validateJsonFiles() {
 
 async function validateMarkdownVersions() {
   const relativePaths = [
+    'skills/SKILL.md',
+    'skills/README.md',
     'skills/api.md',
     'skills/comment.md',
     'skills/constant.md',
