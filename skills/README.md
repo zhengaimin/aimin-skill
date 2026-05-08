@@ -1,4 +1,4 @@
-<!-- aimin-skill-version: 0.1.0 -->
+<!-- aimin-skill-version: 0.1.1 -->
 
 # aimin-skill 规则总览
 
@@ -57,7 +57,6 @@
 | `/am:api`  | 新增接口、类型与枚举                                |
 | `/am:requirement` | 根据产品 prompt 生成 `.agent/ui/{feature-name}/` 需求文档包 |
 | `/am:design` | 根据 `.agent/ui/{feature-name}/` 需求文档生成 Pencil UI 设计稿 |
-| `/am:plan` | 手动触发 AI SOP 计划，聚焦当前项目代码与规则        |
 | `/am:review` | 按 Aimin 与阿里风格 review 当前代码，输出问题与优化建议 |
 | `/am:update` | 按版本升级 `.agent/**`，并只更新 `AGENTS.md` 的 `# Aimin-skill` 段落 |
 | `/am:session` | 提取当前会话信息，并输出到 `.agent/docs/`        |

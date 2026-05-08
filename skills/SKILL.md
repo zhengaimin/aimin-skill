@@ -3,13 +3,13 @@ name: aimin-skill
 description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 与按项目类型命中的 admin/tauri/uni 目录、加载规则并新增接口、生成 .agent/ui 需求与设计产物、review 代码，或将当前会话归档到 .agent/docs
 ---
 
-<!-- aimin-skill-version: 0.1.0 -->
+<!-- aimin-skill-version: 0.1.1 -->
 
 # Aimin Skill
 
 ## Use When
 
-- 用户明确提到 `aimin-skill`、`am:init`、`am:api`、`am:requirement`、`am:design`、`am:plan`、`am:review`、`am:update`、`am:session`
+- 用户明确提到 `aimin-skill`、`am:init`、`am:api`、`am:requirement`、`am:design`、`am:review`、`am:update`、`am:session`
 - 需要初始化项目内的 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md` 与按项目类型命中的 `.agent/admin/**`、`.agent/tauri/**`、`.agent/uni/**`
 - 需要按版本升级项目内的 `.agent/**` 与 `AGENTS.md` 的 `# Aimin-skill` 受管段落
 - 需要按 Aimin 规范新增接口、类型、常量或项目类型规则

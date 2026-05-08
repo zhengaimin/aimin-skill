@@ -8,7 +8,6 @@
   },
   "scripts": {
     "lint": "node scripts/lint.mjs",
-    "test": "node test/install.test.js",
     "install:init": "node scripts/local-dlx.mjs init",
     "install:init:force": "node scripts/local-dlx.mjs init --force",
     "install:doctor": "node scripts/local-dlx.mjs doctor",

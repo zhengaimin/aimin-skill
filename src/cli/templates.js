@@ -110,12 +110,11 @@ export function buildCodexRouterSkillBody(options) {
 ## 路由规则
 
 1. 先检查当前仓库，再读取用户当前消息。
-2. 将任务路由到以下八类之一：
+2. 将任务路由到以下七类之一：
    - 初始化项目根文档、api/comment/naming 规则、索引、lint 脚本和技术栈目录：按 \`$am-init\` 的流程执行
    - 新增或更新接口、类型、枚举：按 \`$am-api\` 的流程执行
    - 根据产品 prompt 生成 \`.agent/ui/{feature-name}/\` 需求文档包：按 \`$am-requirement\` 的流程执行
    - 根据 \`.agent/ui/{feature-name}/\` 需求文档生成 Pencil UI 设计稿：按 \`$am-design\` 的流程执行
-   - 输出 AI SOP 计划：按 \`$am-plan\` 的流程执行
    - 按 Aimin 与阿里风格 review 当前代码：按 \`$am-review\` 的流程执行
    - 升级项目侧 \`.agent/**\` 与 \`AGENTS.md\`：按 \`$am-update\` 的流程执行
    - 提取当前会话信息并输出到 \`.agent/docs/\`：按 \`$am-session\` 的流程执行
@@ -126,9 +125,8 @@ export function buildCodexRouterSkillBody(options) {
 7. 如果用户消息里已经明确出现 api、接口、type、类型、enum、枚举，直接走接口流程。
 8. 如果用户消息里已经明确出现 design、设计、UI、Pencil、界面设计、设计稿，并且提到需求文档、\`.agent/ui\` 或功能目录，直接走设计生成流程。
 9. 如果用户消息里已经明确出现 requirement、需求生成、PRD、产品想法、prompt、需求文档、需求分析，直接走需求生成流程。
-10. 如果用户消息里已经明确出现 plan、计划、SOP、调研、拆任务，直接走计划流程。
-11. 如果仍然无法判断，用一句话要求用户补充目标，并提示可用入口：\`$am-init\`、\`$am-api\`、\`$am-requirement\`、\`$am-design\`、\`$am-plan\`、\`$am-review\`、\`$am-update\`、\`$am-session\`。
-12. 路由完成后，直接按对应流程落地，不要只停留在“建议使用哪个 skill”。
+10. 如果仍然无法判断，用一句话要求用户补充目标，并提示可用入口：\`$am-init\`、\`$am-api\`、\`$am-requirement\`、\`$am-design\`、\`$am-review\`、\`$am-update\`、\`$am-session\`。
+11. 路由完成后，直接按对应流程落地，不要只停留在“建议使用哪个 skill”。
 
 ## 已安装参考
 
@@ -150,10 +148,6 @@ ${commandGuideMap.requirement}
 ## 设计生成流程摘要
 
 ${commandGuideMap.design}
-
-## 计划流程摘要
-
-${commandGuideMap.plan}
 
 ## Review 流程摘要
 
@@ -218,7 +212,6 @@ function buildPromptBody(options) {
   if (command.key === 'requirement') return buildRequirementPromptBody(options);
   if (command.key === 'design') return buildDesignPromptBody(options);
   if (command.key === 'update') return buildUpdatePromptBody(options);
-  if (command.key === 'plan') return buildPlanPromptBody(options);
   if (command.key === 'review') return buildReviewPromptBody(options);
   return buildSessionPromptBody(options);
 }
@@ -530,56 +523,6 @@ function buildUpdatePromptBody(options) {
 - Admin 弹窗模板：\`${adminModalPath}\`
 - Tauri 规则模板：\`${tauriRulePath}\`
 - Uni 规则模板：\`${uniRulePath}\`
-
-## 命令说明
-
-${commandGuide}
-
-## 示例
-
-\`\`\`
-${command.example}
-\`\`\`
-`;
-}
-
-/**
- * 生成 plan 主体
- * @param {object} options 生成参数
- * @param {string} options.commandGuide 命令说明
- * @param {string} options.referenceDir 已安装参考目录
- * @param {object} options.command 命令定义
- * @returns {string}
- */
-function buildPlanPromptBody(options) {
-  const { commandGuide, referenceDir, command } = options;
-  const heading = getPromptHeading(options.surfaceType, command);
-  const skillEntryPath = getReferencePath(referenceDir, 'SKILL.md');
-  const projectAgentsPath = getReferencePath(referenceDir, 'template', 'AGENTS.md');
-  const projectClaudePath = getReferencePath(referenceDir, 'template', 'CLAUDE.md');
-  const lintGuidePath = getReferencePath(referenceDir, 'template', 'scripts', 'lint.md');
-
-  return `# ${heading}
-
-用户调用命令参数：$ARGUMENTS
-
-## 执行要求
-
-1. 这个命令是显式触发命令，只有用户主动调用 \`${command.slashCommand}\` 时才生效
-2. 先检查当前项目代码、目录结构、规则文件与已有实现，再输出 SOP
-3. 如果项目里已有 \`AGENTS.md\`、\`CLAUDE.md\`、\`.agent/api.md\`、\`.agent/comment.md\`、\`.agent/naming.md\`、\`.agent/index/constants.json\`、\`.agent/index/utils.json\`、\`.agent/scripts/lint.md\`，优先以项目侧文件为准；规则文件按只读处理
-4. 默认只输出计划，不直接改文件；只有用户明确要求边计划边实现时，才进入落地
-5. SOP 必须按顺序输出这 5 段：调研、拆任务、实施、自检、交付
-6. 每一段都必须写清：目标、输入、输出、风险或注意事项
-7. 如果识别为 admin 项目，SOP 里必须加入删除未使用变量、未使用导入、未使用参数的收尾动作
-8. 先检查真实项目代码与目录，再把 $ARGUMENTS 当成补充上下文
-
-## 已安装参考
-
-- 主入口：\`${skillEntryPath}\`
-- 项目 AGENTS 模板：\`${projectAgentsPath}\`
-- 项目 CLAUDE 模板：\`${projectClaudePath}\`
-- Lint SOP 模板：\`${lintGuidePath}\`
 
 ## 命令说明
 

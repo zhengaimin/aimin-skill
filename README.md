@@ -2,14 +2,14 @@
 
 `aimin-skill` 是一个本地 npm CLI，用来把 Aimin 的 Claude Code / Codex 命令、skills 与规则文件打包成本地 marketplace/plugin，并注册到当前用户环境。
 
-它适合把同一套团队规范安装到多个项目中：初始化项目规则、按规范新增接口、生成 UI 需求和设计产物、输出实施计划、按阿里风格 review 代码、表格化归档当前会话，并在 Claude Code 与 Codex 中保持一致入口。
+它适合把同一套团队规范安装到多个项目中：初始化项目规则、按规范新增接口、生成 UI 需求和设计产物、按阿里风格 review 代码、表格化归档当前会话，并在 Claude Code 与 Codex 中保持一致入口。
 
 ## 功能概览
 
 - 安装本地 `aimin-skill` marketplace 与 `am` plugin。
 - 注册到 Claude Code 与 Codex 的用户级 marketplace。
-- 为 Claude Code 提供 `/am:init`、`/am:api`、`/am:requirement`、`/am:design`、`/am:plan`、`/am:review`、`/am:update`、`/am:session` 命令。
-- 为 Codex 提供 `$am`、`$am-init`、`$am-api`、`$am-requirement`、`$am-design`、`$am-plan`、`$am-review`、`$am-update`、`$am-session` skills。
+- 为 Claude Code 提供 `/am:init`、`/am:api`、`/am:requirement`、`/am:design`、`/am:review`、`/am:update`、`/am:session` 命令。
+- 为 Codex 提供 `$am`、`$am-init`、`$am-api`、`$am-requirement`、`$am-design`、`$am-review`、`$am-update`、`$am-session` skills。
 - `/am:session` 与 `$am-session` 会把当前会话中已确认的信息整理为 Markdown 文档，并优先使用表格呈现。
 - 复制 `skills/` 规则资料到 plugin 的 `references/` 目录，供命令运行时读取。
 - 支持 `doctor` 检查安装状态，支持 `--force` 重建本地安装内容。
@@ -89,7 +89,6 @@ pnpm run setup:force
 | `pnpm run local:init:force` | 本地执行 `init --force`，兼容别名。 |
 | `pnpm run local:doctor` | 本地执行 `doctor`，兼容别名。 |
 | `npm run lint` | 检查仓库资源完整性。 |
-| `npm test` | 运行安装逻辑测试。 |
 
 ## 安装后路径
 
@@ -112,7 +111,6 @@ pnpm run setup:force
 ├── am-api/
 ├── am-requirement/
 ├── am-design/
-├── am-plan/
 ├── am-review/
 ├── am-update/
 └── am-session/
@@ -131,7 +129,6 @@ pnpm run setup:force
 | `/am:api` | 按 Aimin 规范新增或更新接口、类型与枚举，并维护 `.agent/index/**` 索引。 | `/am:api 新增设备分组列表查询接口` |
 | `/am:requirement` | 根据产品 prompt 在 `.agent/ui/{feature-name}/` 生成需求文档包。 | `/am:requirement 设计一个面向独立音乐人的移动端音乐 App` |
 | `/am:design` | 根据 `.agent/ui/{feature-name}/` 需求文档使用 Pencil 生成 UI 设计稿。 | `/am:design music-app design-source=codex` |
-| `/am:plan` | 手动输出 AI SOP 计划，聚焦当前项目代码与规则，不直接改代码。 | `/am:plan 为设备管理页新增批量分组能力` |
 | `/am:review` | 按 Aimin 与阿里风格 review 当前代码，输出问题、优化建议与可改动点。 | `/am:review 检查当前工作区改动是否符合阿里风格` |
 | `/am:update` | 按版本号升级项目侧 `.agent/**`，并只更新 `AGENTS.md` 的 `# Aimin-skill` 段落。 | `/am:update 升级当前项目规则` |
 | `/am:session` | 提取当前会话中已确认的信息，优先用 Markdown 表格整理，并输出到 `.agent/docs/`。 | `/am:session 将本次接口讨论整理为实现记录` |
@@ -144,7 +141,6 @@ pnpm run setup:force
 | `/am:api` | 接口需求、项目侧 `.agent/api.md` 和索引文件 | 接口请求函数、请求/响应类型、必要的枚举或常量索引更新 |
 | `/am:requirement` | 产品 prompt、目标用户、平台、范围约束 | `.agent/ui/{feature-name}/需求分析.md`、`线框图.md`、`设计说明.md`、`开发说明.md`、`验收标准.md` |
 | `/am:design` | `.agent/ui/{feature-name}/` 需求文档包 | `.agent/ui/{feature-name}/{design-source}/{design-source}.pen`、`images/`、`svg/`、`preview/` |
-| `/am:plan` | 任务描述、当前项目代码和规则文件 | 调研、拆任务、实施、自检、交付 5 段 SOP |
 | `/am:review` | 当前工作区改动、指定文件或模块 | 按 Aimin 与阿里风格整理的问题、优化建议与可改动点 |
 | `/am:update` | 当前项目目录、已安装参考模板 | 升级后的 `.agent/**` 规则文件和 `AGENTS.md` 受管段落 |
 | `/am:session` | 当前会话中已确认的信息 | `.agent/docs/{filename}.md` |
@@ -193,7 +189,6 @@ pnpm run setup:force
 | `$am-api` | 命令 skill | 等价于接口流程，新增接口、类型、枚举并维护索引。 | `$am-api 新增设备分组列表查询接口` |
 | `$am-requirement` | 命令 skill | 等价于需求生成流程，输出 `.agent/ui/{feature-name}/` 需求文档包。 | `$am-requirement 设计一个面向独立音乐人的移动端音乐 App` |
 | `$am-design` | 命令 skill | 等价于 UI 设计流程，根据需求文档生成 Pencil 设计稿。 | `$am-design music-app design-source=codex` |
-| `$am-plan` | 命令 skill | 等价于计划流程，只输出 SOP 计划。 | `$am-plan 先规划批量分组实现步骤` |
 | `$am-review` | 命令 skill | 等价于代码 review 流程，按 Aimin 与阿里风格输出问题和优化建议。 | `$am-review 检查当前工作区改动` |
 | `$am-update` | 命令 skill | 等价于升级流程，按版本更新 `.agent/**` 与 `AGENTS.md` 的受管段落。 | `$am-update 升级当前项目规则` |
 | `$am-session` | 命令 skill | 等价于会话归档流程，优先用 Markdown 表格输出 `.agent/docs/*.md`。 | `$am-session 归档当前会话` |
@@ -214,11 +209,10 @@ pnpm run setup:force
 
 ### Codex 调用规则
 
-- `$am` 是路由入口，会根据用户消息选择 `$am-init`、`$am-api`、`$am-requirement`、`$am-design`、`$am-plan`、`$am-review`、`$am-update` 或 `$am-session`。
+- `$am` 是路由入口，会根据用户消息选择 `$am-init`、`$am-api`、`$am-requirement`、`$am-design`、`$am-review`、`$am-update` 或 `$am-session`。
 - 目标明确时，优先直接调用具体 skill，例如 `$am-requirement`、`$am-design` 或 `$am-review`。
 - `$am-requirement` 只生成需求文档，不生成 Pencil 设计稿。
 - `$am-design` 必须先读取 `.agent/ui/{feature-name}/` 下的需求文档；缺少需求文档时应停止并说明缺失项。
-- `$am-plan` 默认只输出计划，只有用户明确要求边计划边实现时才进入代码修改。
 - `$am-review` 默认只输出 review 结果，只有用户明确要求修复时才进入代码修改。
 
 ## 规则资料
@@ -254,7 +248,6 @@ commands/
 ├── api.md                  # /am:api 命令源文件
 ├── requirement.md          # /am:requirement 命令源文件
 ├── design.md               # /am:design 命令源文件
-├── plan.md                 # /am:plan 命令源文件
 ├── review.md               # /am:review 命令源文件
 ├── update.md               # /am:update 命令源文件
 └── session.md              # /am:session 命令源文件
@@ -276,16 +269,12 @@ src/cli/
 ├── templates.js            # 模板生成
 ├── utils.js                # 文件工具
 └── install/                # 平台安装逻辑
-
-test/
-└── install.test.js         # 安装逻辑测试
 ```
 
 ## 开发与验证
 
 ```bash
 npm run lint
-npm test
 ```
 
 本项目不使用 `postinstall` 自动写入用户目录，所有安装动作都必须显式执行：

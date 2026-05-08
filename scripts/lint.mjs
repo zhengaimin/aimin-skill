@@ -82,21 +82,6 @@ async function validateCommandGuides() {
   assertIncludes(designContent, '验收标准.md', 'design 命令说明缺少验收标准输入');
   assertIncludes(designContent, '不要基于一句话想法直接跳过需求阶段', 'design 命令说明缺少需求阶段边界');
 
-  const planContent = await readText(path.join(repoRoot, 'commands', 'plan.md'));
-  assertIncludes(planContent, '/am:plan', 'plan 命令说明缺少 /am:plan');
-  assertIncludes(planContent, '手动触发', 'plan 命令说明缺少手动触发表述');
-  assertIncludes(planContent, '对本次修改文件执行 lint 校验', 'plan 命令说明缺少改动文件 lint 要求');
-  assertExcludes(planContent, 'git', 'plan 命令说明不应包含 git 内容');
-  assertExcludes(planContent, '远端', 'plan 命令说明不应包含远端同步内容');
-  assertExcludes(planContent, '分支', 'plan 命令说明不应包含分支内容');
-  assertExcludes(planContent, '冲突', 'plan 命令说明不应包含冲突处理内容');
-  assertIncludes(planContent, '调研', 'plan 命令说明缺少调研阶段');
-  assertIncludes(planContent, '拆任务', 'plan 命令说明缺少拆任务阶段');
-  assertIncludes(planContent, '实施', 'plan 命令说明缺少实施阶段');
-  assertIncludes(planContent, '自检', 'plan 命令说明缺少自检阶段');
-  assertIncludes(planContent, '交付', 'plan 命令说明缺少交付阶段');
-  assertIncludes(planContent, '.agent/scripts/lint.md', 'plan 命令说明缺少 lint 收尾');
-
   const reviewContent = await readText(path.join(repoRoot, 'commands', 'review.md'));
   assertIncludes(reviewContent, '/am:review', 'review 命令说明缺少 /am:review');
   assertIncludes(reviewContent, '阿里风格', 'review 命令说明缺少阿里风格目标');
@@ -147,12 +132,12 @@ async function validateProjectTemplates() {
     assertIncludes(content, '具体范围、格式和边界以 `.agent/comment.md` 为准', '渐进式模板缺少 comment 规则引用');
   }
 
-  assertIncludes(skillEntryContent, MARKDOWN_VERSION_MARKER, 'skill 入口缺少版本号');
+  assertIncludes(skillEntryContent, CORE_RULE_VERSION_MARKER, 'skill 入口缺少版本号');
   assertIncludes(skillEntryContent, 'am:requirement', 'skill 入口缺少 requirement 命令说明');
   assertIncludes(skillEntryContent, 'am:design', 'skill 入口缺少 design 命令说明');
   assertIncludes(skillEntryContent, '.agent/ui/{feature-name}/', 'skill 入口缺少 .agent/ui 需求目录说明');
   assertIncludes(skillReadmeContent, 'comment.md', 'README 缺少 comment 规则说明');
-  assertIncludes(skillReadmeContent, MARKDOWN_VERSION_MARKER, 'README 缺少版本号');
+  assertIncludes(skillReadmeContent, CORE_RULE_VERSION_MARKER, 'README 缺少版本号');
   assertIncludes(skillReadmeContent, '/am:requirement', 'README 缺少 requirement 命令说明');
   assertIncludes(skillReadmeContent, '/am:design', 'README 缺少 design 命令说明');
   assertIncludes(skillReadmeContent, '/am:review', 'README 缺少 review 命令说明');
@@ -201,7 +186,7 @@ function getMarkdownVersionMarker(relativePath) {
   if (relativePath === 'skills/template/AGENTS.md')
     return AGENTS_TEMPLATE_VERSION_MARKER;
 
-  if (['skills/api.md', 'skills/comment.md', 'skills/constant.md', 'skills/naming.md'].includes(relativePath))
+  if (['skills/SKILL.md', 'skills/README.md', 'skills/api.md', 'skills/comment.md', 'skills/constant.md', 'skills/naming.md'].includes(relativePath))
     return CORE_RULE_VERSION_MARKER;
 
   return MARKDOWN_VERSION_MARKER;

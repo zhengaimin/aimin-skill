@@ -59,14 +59,6 @@ export const COMMAND_DEFINITIONS = [
     example: '/am:design music-app design-source=codex'
   },
   {
-    key: 'plan',
-    slashCommand: '/am:plan',
-    title: 'AM 计划',
-    description: '输出 AI SOP 计划，聚焦当前项目代码与规则，仅在手动调用 /am:plan 时触发',
-    argumentHint: '[task-notes]',
-    example: '/am:plan 为设备管理页新增批量分组能力，先输出实施 SOP'
-  },
-  {
     key: 'review',
     slashCommand: '/am:review',
     title: 'AM 代码 Review',
