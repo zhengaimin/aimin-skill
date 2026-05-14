@@ -2,15 +2,18 @@
 
 `aimin-skill` 是一个本地 npm CLI，用来把 Aimin 的 Claude Code / Codex 命令、skills 与规则文件打包成本地 marketplace/plugin，并注册到当前用户环境。
 
-它适合把同一套团队规范安装到多个项目中：初始化项目规则、按规范新增接口、生成 UI 需求和设计产物、按阿里风格 review 代码、表格化归档当前会话，并在 Claude Code 与 Codex 中保持一致入口。
+它适合把同一套团队规范安装到多个项目中：初始化项目规则、按规范新增接口、生成 UI 需求和设计产物、按阿里风格 review 代码、把关键功能点和页面归档到 `.agents/archive/`，并在 `AGENTS.md` 维护“修改前必读”的项目级规则表。
 
 ## 功能概览
 
 - 安装本地 `aimin-skill` marketplace 与 `am` plugin。
 - 注册到 Claude Code 与 Codex 的用户级 marketplace。
-- 为 Claude Code 提供 `/am:init`、`/am:api`、`/am:requirement`、`/am:design`、`/am:review`、`/am:update`、`/am:session` 命令。
-- 为 Codex 提供 `$am`、`$am-init`、`$am-api`、`$am-requirement`、`$am-design`、`$am-review`、`$am-update`、`$am-session` skills。
-- `/am:session` 与 `$am-session` 会把当前会话中已确认的信息整理为 Markdown 文档，并优先使用表格呈现。
+- 为 Claude Code 提供 `/am:init`、`/am:api`、`/am:requirement`、`/am:design`、`/am:archive`、`/am:session`、`/am:review`、`/am:update` 命令。
+- 为 Codex 提供 `$am`、`$am-init`、`$am-api`、`$am-requirement`、`$am-design`、`$am-archive`、`$am-session`、`$am-review`、`$am-update` skills。
+- `/am:archive` 会把关键功能点、页面和模块整理为 Markdown 归档，优先使用表格呈现，并同步维护项目 `AGENTS.md` 的项目级规则表。
+- 后续修改已归档功能点或页面时，先读取对应 `.agents/archive/**` 文档，再结合用户 prompt 确认，最后修改代码并回写关键变更。
+- `/am:session` 与 `$am-session` 会把当前会话中已确认的信息整理为 Markdown 文档，并输出到 `.agents/archive/sessions/`。
+- `.agents/docs/` 只保留客户、后台、产品方给的原始文档，不作为归档输出目录。
 - 复制 `skills/` 规则资料到 plugin 的 `references/` 目录，供命令运行时读取。
 - 支持 `doctor` 检查安装状态，支持 `--force` 重建本地安装内容。
 
@@ -111,9 +114,10 @@ pnpm run setup:force
 ├── am-api/
 ├── am-requirement/
 ├── am-design/
+├── am-archive/
+├── am-session/
 ├── am-review/
-├── am-update/
-└── am-session/
+└── am-update/
 ```
 
 同时会尝试更新：
@@ -129,9 +133,10 @@ pnpm run setup:force
 | `/am:api` | 按 Aimin 规范新增或更新接口、类型与枚举，并维护 `.agent/index/**` 索引。 | `/am:api 新增设备分组列表查询接口` |
 | `/am:requirement` | 根据产品 prompt 在 `.agent/ui/{feature-name}/` 生成需求文档包。 | `/am:requirement 设计一个面向独立音乐人的移动端音乐 App` |
 | `/am:design` | 根据 `.agent/ui/{feature-name}/` 需求文档使用 Pencil 生成 UI 设计稿。 | `/am:design music-app design-source=codex` |
+| `/am:archive` | 将关键功能点、页面和模块整理到 `.agents/archive/{features,pages,sessions}/`，同步索引和 `AGENTS.md` 项目级规则表。 | `/am:archive 归档订单详情页` |
+| `/am:session` | 将当前会话整理到 `.agents/archive/sessions/`，作为 `/am:archive` 的兼容入口。 | `/am:session 归档本次实现讨论` |
 | `/am:review` | 按 Aimin 与阿里风格 review 当前代码，输出问题、优化建议与可改动点。 | `/am:review 检查当前工作区改动是否符合阿里风格` |
 | `/am:update` | 按版本号升级项目侧 `.agent/**`，并只更新 `AGENTS.md` 的 `# Aimin-skill` 段落。 | `/am:update 升级当前项目规则` |
-| `/am:session` | 提取当前会话中已确认的信息，优先用 Markdown 表格整理，并输出到 `.agent/docs/`。 | `/am:session 将本次接口讨论整理为实现记录` |
 
 ### Claude Code 命令产物
 
@@ -141,9 +146,10 @@ pnpm run setup:force
 | `/am:api` | 接口需求、项目侧 `.agent/api.md` 和索引文件 | 接口请求函数、请求/响应类型、必要的枚举或常量索引更新 |
 | `/am:requirement` | 产品 prompt、目标用户、平台、范围约束 | `.agent/ui/{feature-name}/需求分析.md`、`线框图.md`、`设计说明.md`、`开发说明.md`、`验收标准.md` |
 | `/am:design` | `.agent/ui/{feature-name}/` 需求文档包 | `.agent/ui/{feature-name}/{design-source}/{design-source}.pen`、`images/`、`svg/`、`preview/` |
+| `/am:archive` | 关键功能点、页面、模块与会话要点 | `.agents/archive/{features,pages,sessions}/{filename}.md`、`.agents/archive/README.md`、`AGENTS.md` 项目级规则表 |
+| `/am:session` | 当前会话中已确认的信息 | `.agents/archive/sessions/{filename}.md`、`.agents/archive/README.md` |
 | `/am:review` | 当前工作区改动、指定文件或模块 | 按 Aimin 与阿里风格整理的问题、优化建议与可改动点 |
 | `/am:update` | 当前项目目录、已安装参考模板 | 升级后的 `.agent/**` 规则文件和 `AGENTS.md` 受管段落 |
-| `/am:session` | 当前会话中已确认的信息 | `.agent/docs/{filename}.md` |
 
 ### UI 需求到设计流程
 
@@ -180,22 +186,64 @@ pnpm run setup:force
 └── preview/
 ```
 
+## 关键功能与页面归档
+
+用 `/am:archive` 把需要长期参考的功能点、页面和模块沉淀到 `.agents/archive/`，并同步维护项目 `AGENTS.md` 的项目级规则表：
+
+```text
+/am:archive 归档订单详情页，记录关键状态、交互、接口和后续修改前必读项
+```
+
+目标项目目录建议：
+
+```text
+.agents/
+├── archive/
+│   ├── README.md
+│   ├── features/
+│   │   └── 2026-05-11-order-detail.md
+│   ├── pages/
+│   │   └── 2026-05-11-order-detail-page.md
+│   └── sessions/
+│       └── 2026-05-11-implementation-notes.md
+└── docs/
+    ├── customer/
+    │   └── 客户提供文档.md
+    └── backend/
+        └── 后台接口或业务说明.md
+```
+
+`.agents/archive/` 存放 AI 整理后的中文表格归档；`.agents/docs/` 只存客户、后台、产品方给的原始资料。
+
+`AGENTS.md` 中会增加或更新项目级规则表：
+
+```markdown
+## 项目级别规则
+
+| 修改范围 | 对应归档文档 | 读取要求 | 备注 |
+| --- | --- | --- | --- |
+| 订单详情页 | `.agents/archive/pages/order-detail.md` | 修改前必读 | 先读文档和 prompt 再改代码 |
+```
+
+修改已归档范围时执行闭环：读取对应归档文档和当前用户 prompt，确认本次修改目标，再改代码，最后把关键变更、影响范围和待确认事项回写到对应归档文档。
+
 ## Codex skills
 
 | Skill | 类型 | 说明 | 示例 |
 | --- | --- | --- | --- |
-| `$am` | 路由 skill | 根据上下文选择初始化、接口、需求、设计、计划、代码 review、升级或会话归档流程。 | `$am init 当前 admin 项目` |
+| `$am` | 路由 skill | 根据上下文选择初始化、接口、需求、设计、归档、会话归档、代码 review 或升级流程。 | `$am init 当前 admin 项目` |
 | `$am-init` | 命令 skill | 等价于初始化流程，按项目类型写入规则文件。 | `$am-init 初始化 AGENTS.md、CLAUDE.md 和 .agent` |
 | `$am-api` | 命令 skill | 等价于接口流程，新增接口、类型、枚举并维护索引。 | `$am-api 新增设备分组列表查询接口` |
 | `$am-requirement` | 命令 skill | 等价于需求生成流程，输出 `.agent/ui/{feature-name}/` 需求文档包。 | `$am-requirement 设计一个面向独立音乐人的移动端音乐 App` |
 | `$am-design` | 命令 skill | 等价于 UI 设计流程，根据需求文档生成 Pencil 设计稿。 | `$am-design music-app design-source=codex` |
+| `$am-archive` | 命令 skill | 等价于关键功能与页面归档流程，输出 `.agents/archive/**/*.md` 并维护 `AGENTS.md` 项目级规则表。 | `$am-archive 归档订单详情页` |
+| `$am-session` | 命令 skill | 等价于会话归档流程，输出 `.agents/archive/sessions/*.md`。 | `$am-session 归档当前会话` |
 | `$am-review` | 命令 skill | 等价于代码 review 流程，按 Aimin 与阿里风格输出问题和优化建议。 | `$am-review 检查当前工作区改动` |
 | `$am-update` | 命令 skill | 等价于升级流程，按版本更新 `.agent/**` 与 `AGENTS.md` 的受管段落。 | `$am-update 升级当前项目规则` |
-| `$am-session` | 命令 skill | 等价于会话归档流程，优先用 Markdown 表格输出 `.agent/docs/*.md`。 | `$am-session 归档当前会话` |
 
 ## 会话归档格式
 
-`/am:session` 和 `$am-session` 默认新建 Markdown 文档，不覆盖已有文件。归档内容只提取当前会话中已经确认的信息，推荐按以下表格化结构整理：
+`/am:session` 和 `$am-session` 是 `/am:archive` 的兼容入口，默认新建 Markdown 文档，不覆盖已有文件。归档内容只提取当前会话中已经确认的信息，输出到 `.agents/archive/sessions/`，推荐按以下表格化结构整理：
 
 | 部分 | 内容 |
 | --- | --- |
@@ -209,8 +257,10 @@ pnpm run setup:force
 
 ### Codex 调用规则
 
-- `$am` 是路由入口，会根据用户消息选择 `$am-init`、`$am-api`、`$am-requirement`、`$am-design`、`$am-review`、`$am-update` 或 `$am-session`。
+- `$am` 是路由入口，会根据用户消息选择 `$am-init`、`$am-api`、`$am-requirement`、`$am-design`、`$am-archive`、`$am-session`、`$am-review` 或 `$am-update`。
 - 目标明确时，优先直接调用具体 skill，例如 `$am-requirement`、`$am-design` 或 `$am-review`。
+- `$am-archive` 用于关键功能点、页面和模块归档，优先输出到 `.agents/archive/{features,pages}/`，并同步维护 `AGENTS.md` 项目级规则表。
+- `$am-session` 用于当前会话归档，优先输出到 `.agents/archive/sessions/`。
 - `$am-requirement` 只生成需求文档，不生成 Pencil 设计稿。
 - `$am-design` 必须先读取 `.agent/ui/{feature-name}/` 下的需求文档；缺少需求文档时应停止并说明缺失项。
 - `$am-review` 默认只输出 review 结果，只有用户明确要求修复时才进入代码修改。
@@ -248,9 +298,10 @@ commands/
 ├── api.md                  # /am:api 命令源文件
 ├── requirement.md          # /am:requirement 命令源文件
 ├── design.md               # /am:design 命令源文件
+├── archive.md              # /am:archive 命令源文件
+├── session.md              # /am:session 命令源文件
 ├── review.md               # /am:review 命令源文件
-├── update.md               # /am:update 命令源文件
-└── session.md              # /am:session 命令源文件
+└── update.md               # /am:update 命令源文件
 
 scripts/
 ├── lint.mjs                # 资源完整性检查

@@ -59,6 +59,22 @@ export const COMMAND_DEFINITIONS = [
     example: '/am:design music-app design-source=codex'
   },
   {
+    key: 'archive',
+    slashCommand: '/am:archive',
+    title: 'AM 归档',
+    description: '提取功能点或页面的关键点，必要时维护项目 AGENTS.md 的项目级规则表，并输出到 .agent/archive 目录',
+    argumentHint: '[archive-notes]',
+    example: '/am:archive 归档订单详情页，整理关键状态、交互、修改前必读项并同步更新项目规则'
+  },
+  {
+    key: 'session',
+    slashCommand: '/am:session',
+    title: 'AM 会话归档',
+    description: '将当前会话整理为中文 Markdown 归档，输出到 .agents/archive/sessions 目录',
+    argumentHint: '[session-notes]',
+    example: '/am:session 归档本次实现讨论'
+  },
+  {
     key: 'review',
     slashCommand: '/am:review',
     title: 'AM 代码 Review',
@@ -73,14 +89,6 @@ export const COMMAND_DEFINITIONS = [
     description: '按版本号强制升级项目侧 .agent 规则，并只更新 AGENTS.md 的 # Aimin-skill 段落',
     argumentHint: '[update-notes]',
     example: '/am:update 升级当前项目 .agent 与 AGENTS.md'
-  },
-  {
-    key: 'session',
-    slashCommand: '/am:session',
-    title: 'AM 会话归档',
-    description: '提取当前会话信息，并输出到项目 .agent/docs 目录',
-    argumentHint: '[doc-notes]',
-    example: '/am:session 将本次接口讨论整理为实现记录'
   }
 ];
 
@@ -90,7 +98,7 @@ export const CODEX_USER_SKILL_DEFINITIONS = [
     skillName: 'am',
     label: '$am',
     type: 'router',
-    description: 'Aimin Codex 路由技能，按上下文选择初始化、接口、需求、设计、计划、代码 review、升级或会话归档流程',
+    description: 'Aimin Codex 路由技能，按上下文选择初始化、接口、需求、设计、关键点归档、会话归档、代码 review 或升级流程',
     example: '$am init 当前 admin 项目，初始化 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 和 .agent/admin'
   },
   ...COMMAND_DEFINITIONS.map(command => ({

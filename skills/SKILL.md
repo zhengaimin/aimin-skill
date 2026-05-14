@@ -1,22 +1,22 @@
 ---
 name: aimin-skill
-description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 与按项目类型命中的 admin/tauri/uni 目录、加载规则并新增接口、生成 .agent/ui 需求与设计产物、review 代码，或将当前会话归档到 .agent/docs
+description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.agent/api、.agent/comment、.agent/naming、.agent/index、.agent/scripts 与按项目类型命中的 admin/tauri/uni 目录、加载规则并新增接口、生成 .agent/ui 需求与设计产物、归档关键功能点和页面到 .agents/archive 并同步维护项目 AGENTS.md 的项目级规则表、review 代码，或将当前会话归档到 .agents/archive/sessions
 ---
 
-<!-- aimin-skill-version: 0.1.1 -->
+<!-- aimin-skill-version: 0.1.3 -->
 
 # Aimin Skill
 
 ## Use When
 
-- 用户明确提到 `aimin-skill`、`am:init`、`am:api`、`am:requirement`、`am:design`、`am:review`、`am:update`、`am:session`
+- 用户明确提到 `aimin-skill`、`am:init`、`am:api`、`am:requirement`、`am:design`、`am:archive`、`am:session`、`am:review`、`am:update`
 - 需要初始化项目内的 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md` 与按项目类型命中的 `.agent/admin/**`、`.agent/tauri/**`、`.agent/uni/**`
 - 需要按版本升级项目内的 `.agent/**` 与 `AGENTS.md` 的 `# Aimin-skill` 受管段落
 - 需要按 Aimin 规范新增接口、类型、常量或项目类型规则
 - 需要根据产品 prompt 在 `.agent/ui/{feature-name}/` 下生成需求文档包
 - 需要根据 `.agent/ui/{feature-name}/` 需求文档生成 Pencil UI 设计稿
 - 需要按 Aimin 与阿里风格 review 当前代码，输出问题、优化建议与可改动点
-- 需要提取当前会话信息，并输出到项目 `.agent/docs/` 目录
+- 需要将关键功能点、页面或当前会话整理为中文表格文档，输出到项目 `.agents/archive/` 目录，并同步维护目标项目 `AGENTS.md` 的项目级规则表；`.agents/docs/` 只作为客户、后台、产品方原始文档目录
 
 ## Workflow
 
@@ -26,7 +26,9 @@ description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.a
 4. 如果任务是 review 代码，优先读项目侧 `AGENTS.md`、`CLAUDE.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/api.md`、`.agent/index/constants.json`、`.agent/index/utils.json`，再按 review 范围读取代码；缺失时回退到安装包内规则
 5. 如果任务是生成需求，先检查 `.agent/ui/` 是否已有同名功能目录，再按 `.agent/ui/{feature-name}/` 输出 `需求分析.md`、`线框图.md`、`设计说明.md`、`开发说明.md`、`验收标准.md`
 6. 如果任务是生成设计，先读取 `.agent/ui/{feature-name}/` 下的需求文档，再把 Pencil 设计稿输出到 `.agent/ui/{feature-name}/{design-source}/`
-7. 仅在命中对应场景时按需加载：
+7. 如果任务是关键功能点、页面或模块归档，先检查 `.agents/archive/README.md`、`.agents/archive/features/`、`.agents/archive/pages/`、当前项目 `AGENTS.md` 的项目级规则表与只读的 `.agents/docs/`，再输出到 `.agents/archive/{features|pages}/`
+8. 如果任务是当前会话归档，输出到 `.agents/archive/sessions/`
+9. 仅在命中对应场景时按需加载：
    - `comment.md`
    - `naming.md`
    - `constant.md`
@@ -41,17 +43,18 @@ description: 用于按 Aimin 规范初始化或升级 AGENTS.md、CLAUDE.md、.a
    - `template/admin/modal.md`
    - `template/tauri/rules.md`
    - `template/uni/rules.md`
-8. 先检查当前项目代码与目录，再判断项目类型和技术栈
-9. 项目侧默认维护 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md`，以及按项目类型命中的 `.agent/admin/**`、`.agent/tauri/**`、`.agent/uni/**` 中一组
-10. `/am:init` 只创建根目录 `AGENTS.md`、`CLAUDE.md` 与最小 `.agent/**` 规则集，不创建或修改 `.gitignore`
-11. 禁止因为技术栈识别而额外生成 `.agent/constant.md`、`.agent/vue.md`、`.agent/unocss.md`；`admin`、`tauri`、`uni` 最多命中一组
-12. 初始化时检查受管 `.agent/**` 文件版本；目标缺少版本号或版本不一致时，按参考文件强制更新
-13. 更新 `AGENTS.md`、`CLAUDE.md` 时只替换 `# Aimin-skill` 受管段落，不改项目独有规则
-14. `/am:requirement` 只创建或更新 `.agent/ui/{feature-name}/` 下的需求文档包，不生成设计稿或代码
-15. `/am:design` 只根据 `.agent/ui/{feature-name}/` 需求文档生成 Pencil 设计产物，不补业务规则或写前端代码
-16. `/am:review` 默认只输出 review 结果，不直接修改文件；只有用户明确要求修复时才进入修改流程
-17. `/am:update` 只升级 `.agent/**` 与 `AGENTS.md`，不更新 `CLAUDE.md`
-18. `/am:session` 只创建或更新 `.agent/docs/*.md`，不要顺带初始化规则文件或进入代码实现
+10. 先检查当前项目代码与目录，再判断项目类型和技术栈
+11. 项目侧默认维护 `AGENTS.md`、`CLAUDE.md`、`.agent/api.md`、`.agent/comment.md`、`.agent/naming.md`、`.agent/index/**`、`.agent/scripts/lint.md`，以及按项目类型命中的 `.agent/admin/**`、`.agent/tauri/**`、`.agent/uni/**` 中一组
+12. `/am:init` 只创建根目录 `AGENTS.md`、`CLAUDE.md` 与最小 `.agent/**` 规则集，不创建或修改 `.gitignore`
+13. 禁止因为技术栈识别而额外生成 `.agent/constant.md`、`.agent/vue.md`、`.agent/unocss.md`；`admin`、`tauri`、`uni` 最多命中一组
+14. 初始化时检查受管 `.agent/**` 文件版本；目标缺少版本号或版本不一致时，按参考文件强制更新
+15. 更新 `AGENTS.md`、`CLAUDE.md` 时只替换 `# Aimin-skill` 受管段落，不改项目独有规则
+16. `/am:requirement` 只创建或更新 `.agent/ui/{feature-name}/` 下的需求文档包，不生成设计稿或代码
+17. `/am:design` 只根据 `.agent/ui/{feature-name}/` 需求文档生成 Pencil 设计产物，不补业务规则或写前端代码
+18. `/am:archive` 先读取对应归档文档和用户 prompt 进行确认，再修改代码；同时更新 `.agents/archive/**/*.md`、`.agents/archive/README.md` 与目标项目 `AGENTS.md` 的项目级规则表，不要写入 `.agents/docs/`
+19. `/am:review` 默认只输出 review 结果，不直接修改文件；只有用户明确要求修复时才进入修改流程
+20. `/am:update` 只升级 `.agent/**` 与 `AGENTS.md`，不更新 `CLAUDE.md`
+21. `/am:session` 只创建或更新 `.agents/archive/sessions/*.md` 与 `.agents/archive/README.md`，不要顺带初始化规则文件或进入代码实现
 
 ## Constraints
 

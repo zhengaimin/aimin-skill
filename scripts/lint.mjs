@@ -7,9 +7,11 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const errors = [];
 const RULE_VERSION = '0.1.0';
 const MARKDOWN_VERSION_MARKER = `<!-- aimin-skill-version: ${RULE_VERSION} -->`;
+const GUIDE_RULE_VERSION = '0.1.3';
+const GUIDE_RULE_VERSION_MARKER = `<!-- aimin-skill-version: ${GUIDE_RULE_VERSION} -->`;
 const CORE_RULE_VERSION = '0.1.1';
 const CORE_RULE_VERSION_MARKER = `<!-- aimin-skill-version: ${CORE_RULE_VERSION} -->`;
-const AGENTS_TEMPLATE_VERSION = '0.1.2';
+const AGENTS_TEMPLATE_VERSION = '0.1.3';
 const AGENTS_TEMPLATE_VERSION_MARKER = `<!-- aimin-skill-version: ${AGENTS_TEMPLATE_VERSION} -->`;
 
 await validateCommandGuides();
@@ -92,6 +94,28 @@ async function validateCommandGuides() {
   assertIncludes(reviewContent, '.agent/naming.md', 'review 命令说明缺少 naming 规则引用');
   assertIncludes(reviewContent, '.agent/api.md', 'review 命令说明缺少 api 规则引用');
 
+  const archiveContent = await readText(path.join(repoRoot, 'commands', 'archive.md'));
+  assertIncludes(archiveContent, '/am:archive', 'archive 命令说明缺少 /am:archive');
+  assertIncludes(archiveContent, '.agent/archive/', 'archive 命令说明缺少 .agent/archive 输出目录');
+  assertIncludes(archiveContent, '.agent/docs/', 'archive 命令说明缺少 .agent/docs 原始资料说明');
+  assertIncludes(archiveContent, '.agent/archive/README.md', 'archive 命令说明缺少 archive 索引要求');
+  assertIncludes(archiveContent, 'AGENTS.md', 'archive 命令说明缺少 AGENTS.md 维护要求');
+  assertIncludes(archiveContent, '项目级别规则', 'archive 命令说明缺少项目级规则表');
+  assertIncludes(archiveContent, '修改范围 / 对应归档文档 / 读取要求 / 备注', 'archive 命令说明缺少项目级规则表头');
+  assertIncludes(archiveContent, '只整理关键点', 'archive 命令说明缺少关键点要求');
+  assertIncludes(archiveContent, '功能点和页面', 'archive 命令说明缺少功能点和页面分类');
+  assertIncludes(archiveContent, '文件落点', 'archive 命令说明缺少文件落点规则');
+  assertIncludes(archiveContent, '已有对应归档文件', 'archive 命令说明缺少更新对应文件规则');
+  assertIncludes(archiveContent, '稳定主题', 'archive 命令说明缺少稳定主题新建规则');
+  assertExcludes(archiveContent, 'YYYY-MM-DD-{topic}.md', 'archive 命令说明不应使用日期文件名模板');
+  assertIncludes(archiveContent, 'Markdown 表格', 'archive 命令说明缺少表格化要求');
+  assertIncludes(archiveContent, '必须先读取相关归档文档', 'archive 命令说明缺少预读要求');
+  assertIncludes(archiveContent, '用户 prompt', 'archive 命令说明缺少 prompt 确认要求');
+  assertIncludes(archiveContent, '回写到对应归档文档', 'archive 命令说明缺少修改后回写要求');
+  assertExcludes(archiveContent, '.agent/archive/features/', 'archive 命令说明不应再使用 features 子目录');
+  assertExcludes(archiveContent, '.agent/archive/pages/', 'archive 命令说明不应再使用 pages 子目录');
+  assertExcludes(archiveContent, '.agent/archive/sessions/', 'archive 命令说明不应再使用 sessions 子目录');
+
   const updateContent = await readText(path.join(repoRoot, 'commands', 'update.md'));
   assertIncludes(updateContent, '/am:update', 'update 命令说明缺少 /am:update');
   assertIncludes(updateContent, '.agent/api.md', 'update 命令说明缺少 api 规则升级目标');
@@ -104,7 +128,8 @@ async function validateCommandGuides() {
 
   const sessionContent = await readText(path.join(repoRoot, 'commands', 'session.md'));
   assertIncludes(sessionContent, '/am:session', 'session 命令说明缺少 /am:session');
-  assertIncludes(sessionContent, '.agent/docs/', 'session 命令说明缺少 .agent/docs 输出目录');
+  assertIncludes(sessionContent, '.agents/archive/sessions/', 'session 命令说明缺少 archive 会话输出目录');
+  assertIncludes(sessionContent, '.agents/archive/README.md', 'session 命令说明缺少 archive 索引要求');
   assertIncludes(sessionContent, '当前会话', 'session 命令说明缺少当前会话来源');
   assertIncludes(sessionContent, '不要覆盖', 'session 命令说明缺少防覆盖要求');
   assertIncludes(sessionContent, '不要修改 `AGENTS.md`', 'session 命令说明缺少边界要求');
@@ -130,16 +155,22 @@ async function validateProjectTemplates() {
     assertIncludes(content, '### 代码注释', '渐进式模板缺少代码注释章节');
     assertIncludes(content, '新增或修改代码时，同步检查注释是否需要补充、调整或删除', '渐进式模板缺少注释检查要求');
     assertIncludes(content, '具体范围、格式和边界以 `.agent/comment.md` 为准', '渐进式模板缺少 comment 规则引用');
+    assertIncludes(content, '### 项目级别规则', '渐进式模板缺少项目级别规则章节');
+    assertIncludes(content, '修改范围 | 对应归档文档 | 读取要求 | 备注', '渐进式模板缺少项目级规则表');
+    assertIncludes(content, '修改某个功能点、页面或模块前', '渐进式模板缺少归档预读要求');
   }
 
-  assertIncludes(skillEntryContent, CORE_RULE_VERSION_MARKER, 'skill 入口缺少版本号');
+  assertIncludes(skillEntryContent, GUIDE_RULE_VERSION_MARKER, 'skill 入口缺少版本号');
   assertIncludes(skillEntryContent, 'am:requirement', 'skill 入口缺少 requirement 命令说明');
   assertIncludes(skillEntryContent, 'am:design', 'skill 入口缺少 design 命令说明');
+  assertIncludes(skillEntryContent, 'am:archive', 'skill 入口缺少 archive 命令说明');
   assertIncludes(skillEntryContent, '.agent/ui/{feature-name}/', 'skill 入口缺少 .agent/ui 需求目录说明');
   assertIncludes(skillReadmeContent, 'comment.md', 'README 缺少 comment 规则说明');
-  assertIncludes(skillReadmeContent, CORE_RULE_VERSION_MARKER, 'README 缺少版本号');
+  assertIncludes(skillReadmeContent, GUIDE_RULE_VERSION_MARKER, 'README 缺少版本号');
   assertIncludes(skillReadmeContent, '/am:requirement', 'README 缺少 requirement 命令说明');
   assertIncludes(skillReadmeContent, '/am:design', 'README 缺少 design 命令说明');
+  assertIncludes(skillReadmeContent, '/am:archive', 'README 缺少 archive 命令说明');
+  assertIncludes(skillReadmeContent, '项目级规则表', 'README 缺少项目级规则表说明');
   assertIncludes(skillReadmeContent, '/am:review', 'README 缺少 review 命令说明');
   assertIncludes(skillReadmeContent, '/am:session', 'README 缺少 session 命令说明');
   assertIncludes(lintContent, '.agent/index/constants.json', 'lint 模板缺少 constants 索引引用');
@@ -183,10 +214,13 @@ async function validateMarkdownVersions() {
 }
 
 function getMarkdownVersionMarker(relativePath) {
+  if (['skills/SKILL.md', 'skills/README.md'].includes(relativePath))
+    return GUIDE_RULE_VERSION_MARKER;
+
   if (relativePath === 'skills/template/AGENTS.md')
     return AGENTS_TEMPLATE_VERSION_MARKER;
 
-  if (['skills/SKILL.md', 'skills/README.md', 'skills/api.md', 'skills/comment.md', 'skills/constant.md', 'skills/naming.md'].includes(relativePath))
+  if (['skills/api.md', 'skills/comment.md', 'skills/constant.md', 'skills/naming.md'].includes(relativePath))
     return CORE_RULE_VERSION_MARKER;
 
   return MARKDOWN_VERSION_MARKER;

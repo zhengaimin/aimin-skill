@@ -1,14 +1,17 @@
 # 目标
 
-`/am:session` 是一个手动触发的会话归档命令，用来提取当前会话中已经确认的信息，并输出到当前项目的 `.agent/docs/` 目录。
+`/am:session` 是 `/am:archive` 的兼容命令，用来把当前会话整理成中文 Markdown 文档，输出到当前项目的 `.agents/archive/sessions/` 目录。
 
 ## 默认行为
 
-1. 先检查当前项目是否存在 `.agent/` 目录；不存在时只创建 `.agent/docs/`，不要初始化其它规则文件。
+1. 先检查当前项目是否存在 `.agents/`、`.agents/archive/`、`.agents/archive/README.md`、以及现有会话归档文档。
 2. 只整理当前会话中可见、已确认的信息，不补写未讨论的需求、接口、代码细节或结论。
 3. 默认创建新的 Markdown 文档，不覆盖已有文档。
 4. 用户在命令参数中指定标题、主题或文件名时，优先采用用户指定内容。
 5. 文件名使用短横线命名，默认格式为 `session-YYYY-MM-DD-HHmm.md`；如果可以从参数或会话主题提取清晰主题，则使用 `YYYY-MM-DD-{topic}.md`。
+6. 只把当前会话内容写到 `.agents/archive/sessions/`，不要把结果写到 `.agents/docs/`。
+7. 如果项目里同时存在 `.agents/docs/`，将其视为客户、后台、产品方提供的原始资料，只读不写。
+8. 如果对应会话记录后续需要复查，优先从 `.agents/archive/README.md` 或 `.agents/archive/sessions/` 里查找。
 
 ## 文档内容
 
@@ -77,9 +80,9 @@
 
 ## 写入要求
 
-1. 确保 `.agent/docs/` 存在。
-2. 写入 `.agent/docs/{filename}.md`。
-3. 如果目标文件已存在，追加序号后缀，如 `-2`、`-3`，不要覆盖。
+1. 确保 `.agents/archive/`、`.agents/archive/sessions/` 和 `.agents/archive/README.md` 存在。
+2. 写入 `.agents/archive/sessions/{filename}.md`。
+3. 如果目标文件已存在，追加 `-2`、`-3` 等序号后缀，不要覆盖。
 4. 不要修改 `AGENTS.md`、`CLAUDE.md`、`.agent/index/**` 或其它规则文件。
 5. 不要执行代码实现、格式化或 lint，除非用户在命令参数里明确要求。
 

@@ -348,7 +348,7 @@ async function readCommandGuideMap(sourceCommandDir) {
 function buildClaudeMarketplace(version) {
   return {
     name: MARKETPLACE_NAME,
-    description: 'Aimin 本地命令 marketplace，提供 /am:init、/am:api、/am:requirement、/am:design、/am:review、/am:update、/am:session',
+    description: 'Aimin 本地命令 marketplace，提供 /am:init、/am:api、/am:requirement、/am:design、/am:archive、/am:session、/am:review、/am:update',
     owner: {
       name: 'Aimin',
       email: 'aimin@example.com'
@@ -411,7 +411,7 @@ function buildCodexPluginManifest(version) {
     interface: {
       displayName: 'Aimin Skill',
       shortDescription: 'Aimin 命令插件',
-      longDescription: '提供 Aimin 项目规范参考，并配合 $am、$am-init、$am-api、$am-requirement、$am-design、$am-review、$am-update、$am-session 使用。',
+      longDescription: '提供 Aimin 项目规范参考，并配合 $am、$am-init、$am-api、$am-requirement、$am-design、$am-archive、$am-session、$am-review、$am-update 使用。',
       developerName: 'Aimin',
       category: 'Productivity',
       capabilities: ['Interactive', 'Write'],
@@ -420,9 +420,11 @@ function buildCodexPluginManifest(version) {
         '用 $am-api 新增接口。',
         '用 $am-requirement 根据产品 prompt 生成 .agent/ui 需求文档包。',
         '用 $am-design 根据 .agent/ui 需求文档生成 Pencil UI 设计稿。',
+        '用 $am-archive 提取功能点或页面关键点，先读取对应 `.agent/archive/**` 文档和用户 prompt 进行确认，修改代码后回写关键变更，并按需维护目标项目 AGENTS.md 的项目级规则表。',
+        '用 $am-session 将当前会话整理到 .agents/archive/sessions/。',
         '用 $am-review 按 Aimin 与阿里风格 review 当前代码。',
         '用 $am-update 按版本升级项目 .agent 与 AGENTS.md。',
-        '用 $am-session 提取当前会话信息并输出到 .agent/docs。'
+        '把客户、后台、产品方给的原始文档放到 .agent/docs/，不要把归档结果写到这里。'
       ]
     }
   };
