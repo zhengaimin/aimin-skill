@@ -1,4 +1,4 @@
-<!-- aimin-skill-version: 0.1.0 -->
+<!-- aimin-skill-version: 0.1.1 -->
 
 # Admin 主页面模板
 
@@ -47,7 +47,8 @@ src/views/{模块名}/{页面名}/
 
 - **接口必须二次封装**：页面内所有 API 调用都要封装为 `axios{HttpMethod}{Action}Api` 再使用，遵循 `.agent/naming.md` 的封装规范。
 - **axios 异常处理**：`axios{HttpMethod}{Action}Api` 内部 `catch` 必须 `console.error(error)`，并 `return { code: -1, data: null }`。
-- **useManage 例外**：`useManage` 传入的 `get/delete/update` 接口不需要再包一层 `axios{HttpMethod}{Action}Api`，直接传入 `src/api/modules` 的方法即可。
+- **useManage 例外**：`useManage` 传入的 `get/delete/update` 接口不需要再包一层 `axios{HttpMethod}{Action}Api`，列表查询直接传入 `src/api/modules` 的 `get{Entity}ListApi`；删除/状态更新只允许做 `id`、`status` 这类最小字段透传。
+- **useManage 参数规则**：不要为了 `useManage` 在页面层新增 `build...ListQuery`、`resolve...Params`、`axiosGet...ListApi` 等参数拼装；分页、搜索参数由 `useManage` 归一化后透传给列表接口，接口 URL、路径参数差异应在 `src/api/modules` 内处理。
 - **弹窗提交规范**：当 modal 的 `handleSubmitForm` 同时包含新增/更新两种接口调用时，必须分别封装 `axiosPost...` / `axiosPut...`；请求参数拼装与响应处理（如成功提示、失败兜底）统一放到封装内。如果只调用一种接口，则不强制封装。
 - **payload 封装规范**：当提交字段超过 **3 个** 时，必须把请求参数拼装抽到页面上级目录的 `utils/payload.ts`，通过 `buildPost{Entity}Payload` / `buildPut{Entity}Payload` 进行**逐字段赋值**与**必要的 trim/undefined 处理**；字段不超过 3 个时可在 `axiosPost...` / `axiosPut...` 中直接拼装。
 - **loading 规则**：
@@ -77,8 +78,8 @@ const { isAllSchools, schoolId } = useSchool();
 const { proTable, axiosGetTableList, refreshTableList, deleteRow } = useManage(
   {
     get: get{Entity}ListApi,
-    delete: delete{Entity}Api,
-    // update: putUpdate{Entity}StatusApi,  // 如有状态切换功能
+    delete: ({ id }) => delete{Entity}Api({ id }),
+    // update: ({ id, status }) => putUpdate{Entity}StatusApi({ id, status })  // 如有状态切换功能
   },
   null,
   null
