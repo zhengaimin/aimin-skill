@@ -70,7 +70,7 @@ export const COMMAND_DEFINITIONS = [
     key: 'session',
     slashCommand: '/am:session',
     title: 'AM 会话归档',
-    description: '将当前会话整理为中文 Markdown 归档，输出到 .agents/archive/sessions 目录',
+    description: '将当前会话整理为中文 Markdown 归档，输出到 .agent/archive/sessions 目录',
     argumentHint: '[session-notes]',
     example: '/am:session 归档本次实现讨论'
   },

@@ -3,6 +3,7 @@
  * 负责生成本地 marketplace/plugin，并按平台注册到 Claude Code 与 Codex
  */
 
+import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
@@ -34,8 +35,7 @@ import {
   writeJson,
   writeText
 } from '../utils.js';
-import { registerPlatformTool as registerMacPlatformTool } from './mac.js';
-import { registerPlatformTool as registerWindowsPlatformTool } from './windows.js';
+import { registerPlatformTool } from './platform.js';
 
 /**
  * 构建安装上下文
@@ -46,7 +46,6 @@ import { registerPlatformTool as registerWindowsPlatformTool } from './windows.j
  */
 export async function buildInstallContext(options) {
   const { homeDir, repoRoot } = options;
-  const packageMeta = await readPackageMeta(repoRoot);
   const sourceCommandDir = path.join(repoRoot, 'commands');
   const sourceSkillDir = path.join(repoRoot, 'skills');
   const sourceSkillEntryPath = path.join(sourceSkillDir, 'SKILL.md');
@@ -54,8 +53,31 @@ export async function buildInstallContext(options) {
   if (!await pathExists(sourceSkillEntryPath))
     throw new Error(`缺少 skill 入口文件: ${sourceSkillEntryPath}`);
 
+  const pathContext = await buildInstallPathContext({
+    homeDir,
+    repoRoot
+  });
   const sourceSkillFiles = await listRelativeFiles(sourceSkillDir);
   const commandGuideMap = await readCommandGuideMap(sourceCommandDir);
+
+  return {
+    ...pathContext,
+    commandGuideMap,
+    sourceSkillDir,
+    sourceSkillFiles
+  };
+}
+
+/**
+ * 构建安装路径上下文
+ * @param {object} options 构建参数
+ * @param {string} options.homeDir 用户目录
+ * @param {string} options.repoRoot 仓库根目录
+ * @returns {Promise<object>}
+ */
+export async function buildInstallPathContext(options) {
+  const { homeDir, repoRoot } = options;
+  const packageMeta = await readPackageMeta(repoRoot);
   const codexUserSkillRoot = path.join(homeDir, '.codex', 'skills');
   const marketplaceRoot = path.join(homeDir, `.${PACKAGE_NAME}-marketplace`);
   const pluginRoot = path.join(marketplaceRoot, 'plugins', PLUGIN_NAME);
@@ -68,15 +90,12 @@ export async function buildInstallContext(options) {
   }));
 
   return {
-    commandGuideMap,
     codexUserSkillRoot,
     manifestPath,
     marketplaceRoot,
     packageMeta,
     pluginRoot,
     referenceDir,
-    sourceSkillDir,
-    sourceSkillFiles,
     toolPlans
   };
 }
@@ -94,7 +113,6 @@ export async function buildInstallContext(options) {
 export async function initUserInstall(options) {
   const { env = process.env, force = false, platform = process.platform } = options;
   const context = await buildInstallContext(options);
-  const platformToolInstaller = getPlatformToolInstaller(platform);
   const platformKey = normalizePlatformKey(platform);
 
   if (force && await pathExists(context.marketplaceRoot))
@@ -108,7 +126,7 @@ export async function initUserInstall(options) {
 
   const results = [];
   for (const toolPlan of context.toolPlans) {
-    results.push(await platformToolInstaller({
+    results.push(await registerPlatformTool({
       env,
       helpers: {
         readJsonIfExists,
@@ -134,16 +152,6 @@ export async function initUserInstall(options) {
     pluginRoot: context.pluginRoot,
     results
   };
-}
-
-/**
- * 根据平台选择安装执行器
- * @param {NodeJS.Platform} platform 运行平台
- * @returns {(options: object) => Promise<object>}
- */
-function getPlatformToolInstaller(platform) {
-  if (platform === 'win32') return registerWindowsPlatformTool;
-  return registerMacPlatformTool;
 }
 
 /**
@@ -421,7 +429,7 @@ function buildCodexPluginManifest(version) {
         '用 $am-requirement 根据产品 prompt 生成 .agent/ui 需求文档包。',
         '用 $am-design 根据 .agent/ui 需求文档生成 Pencil UI 设计稿。',
         '用 $am-archive 提取功能点或页面关键点，先读取对应 `.agent/archive/**` 文档和用户 prompt 进行确认，修改代码后回写关键变更，并按需维护目标项目 AGENTS.md 的项目级规则表。',
-        '用 $am-session 将当前会话整理到 .agents/archive/sessions/。',
+        '用 $am-session 将当前会话整理到 .agent/archive/sessions/。',
         '用 $am-review 按 Aimin 与阿里风格 review 当前代码。',
         '用 $am-update 按版本升级项目 .agent 与 AGENTS.md。',
         '把客户、后台、产品方给的原始文档放到 .agent/docs/，不要把归档结果写到这里。'
@@ -446,8 +454,16 @@ const DEBUGGER_ENV_KEYS = [
 function buildToolCommandEnv(env, homeDir) {
   const childEnv = {
     ...env,
+    CODEX_HOME: path.join(homeDir, '.codex'),
     HOME: homeDir
   };
+
+  if (process.platform === 'win32') {
+    const parsedHome = path.parse(homeDir);
+    childEnv.USERPROFILE = homeDir;
+    childEnv.HOMEDRIVE = parsedHome.root.replace(/[\\/]$/, '');
+    childEnv.HOMEPATH = homeDir.slice(parsedHome.root.length - 1);
+  }
 
   for (const envKey of Object.keys(childEnv)) {
     if (DEBUGGER_ENV_KEYS.some(debugKey => debugKey.toLowerCase() === envKey.toLowerCase()))
@@ -468,10 +484,11 @@ function buildToolCommandEnv(env, homeDir) {
  */
 async function runToolCommand(command, args, options) {
   await new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
+    const commandPath = resolveToolCommandPath(command, options.env);
+    const child = spawn(commandPath, args, {
       cwd: options.homeDir,
       env: buildToolCommandEnv(options.env, options.homeDir),
-      shell: process.platform === 'win32',
+      shell: shouldUseShellForCommand(command, commandPath),
       stdio: 'pipe'
     });
 
@@ -500,4 +517,51 @@ async function runToolCommand(command, args, options) {
       reject(new Error(`执行命令失败 ${command} ${args.join(' ')}: ${message}`));
     });
   });
+}
+
+/**
+ * 解析外部工具命令路径
+ * @param {string} command 命令名
+ * @param {NodeJS.ProcessEnv} env 环境变量
+ * @returns {string}
+ */
+function resolveToolCommandPath(command, env) {
+  if (process.platform !== 'win32' || path.isAbsolute(command) || path.extname(command))
+    return command;
+
+  const pathKey = Object.keys(env).find(key => key.toLowerCase() === 'path');
+  const pathValue = pathKey ? env[pathKey] : '';
+  const extensions = getWindowsPathExtensions(env);
+
+  for (const dirPath of pathValue.split(path.delimiter)) {
+    if (!dirPath) continue;
+
+    for (const extension of extensions) {
+      const commandPath = path.join(dirPath, `${command}${extension}`);
+      if (existsSync(commandPath)) return commandPath;
+    }
+  }
+
+  return command;
+}
+
+/**
+ * 获取 Windows 命令扩展名
+ * @param {NodeJS.ProcessEnv} env 环境变量
+ * @returns {string[]}
+ */
+function getWindowsPathExtensions(env) {
+  const pathExtKey = Object.keys(env).find(key => key.toLowerCase() === 'pathext');
+  const pathExtValue = pathExtKey ? env[pathExtKey] : '.COM;.EXE;.BAT;.CMD';
+  return pathExtValue.split(';').filter(Boolean).map(extension => extension.toLowerCase());
+}
+
+/**
+ * 判断命令是否需要 shell 执行
+ * @param {string} command 原始命令名
+ * @param {string} commandPath 命令路径
+ * @returns {boolean}
+ */
+function shouldUseShellForCommand(command, commandPath) {
+  return process.platform === 'win32' && (command === commandPath || /\.(?:bat|cmd)$/i.test(commandPath));
 }

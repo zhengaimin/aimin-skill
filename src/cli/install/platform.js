@@ -1,5 +1,5 @@
 /**
- * Windows 安装执行器
+ * 平台安装执行器
  * 负责按当前平台注册 Claude Code 与 Codex
  */
 
@@ -233,7 +233,7 @@ async function readCodexMarketplaceRegistration(filePath, helpers) {
   }
 
   const sectionMatch = configText.match(
-    new RegExp(`\\[marketplaces\\.${MARKETPLACE_NAME.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}\\]([\\s\\S]*?)(?:\\n\\[[^\\n]+\\]|$)`)
+    new RegExp(`\\[marketplaces\\.${MARKETPLACE_NAME}\\]([\\s\\S]*?)(?:\\n\\[[^\\n]+\\]|$)`)
   );
 
   if (!sectionMatch) {

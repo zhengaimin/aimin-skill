@@ -116,12 +116,12 @@ export function buildCodexRouterSkillBody(options) {
    - 根据产品 prompt 生成 \`.agent/ui/{feature-name}/\` 需求文档包：按 \`$am-requirement\` 的流程执行
    - 根据 \`.agent/ui/{feature-name}/\` 需求文档生成 Pencil UI 设计稿：按 \`$am-design\` 的流程执行
    - 提取功能点或页面的关键点，并按需维护项目 \`AGENTS.md\` 的项目级规则表：按 \`$am-archive\` 的流程执行
-   - 将当前会话整理到 \`.agents/archive/sessions/\`：按 \`$am-session\` 的流程执行
+   - 将当前会话整理到 \`.agent/archive/sessions/\`：按 \`$am-session\` 的流程执行
    - 按 Aimin 与阿里风格 review 当前代码：按 \`$am-review\` 的流程执行
    - 升级项目侧 \`.agent/**\` 与 \`AGENTS.md\`：按 \`$am-update\` 的流程执行
 3. 如果用户消息里已经明确出现 am:update、$am-update、规则升级、版本更新、升级 .agent、升级 AGENTS.md、强制更新 .agent，直接走升级流程。
 4. 如果用户消息里已经明确出现 am:archive、$am-archive、archive、关键点、功能点、页面、修改前阅读、预读、输出到 .agent/archive，直接走关键点归档流程。
-5. 如果用户消息里已经明确出现 session、会话、整理当前对话、会话记录、输出到 .agents/archive/sessions，直接走会话归档流程。
+5. 如果用户消息里已经明确出现 session、会话、整理当前对话、会话记录、输出到 .agent/archive/sessions，直接走会话归档流程。
 6. 如果用户消息里已经明确出现 review、代码审查、代码评审、阿里风格检查、优化建议、改动建议，直接走 review 流程。
 7. 如果用户消息里已经明确出现 init、初始化、AGENTS.md、CLAUDE.md、api.md、comment.md、naming.md、index、constants、utils、lint.md、admin、tauri、uni，直接走初始化流程。
 8. 如果用户消息里已经明确出现 api、接口、type、类型、enum、枚举，直接走接口流程。
@@ -191,15 +191,11 @@ $am-session 归档当前会话
  * @returns {string}
  */
 export function buildCodexCommandSkillBody(options) {
-  const promptBody = buildPromptBody({
+  return buildPromptBody({
     ...options,
+    codexUserSkillLabel: options.entryLabel,
     surfaceType: 'codex-user-skill'
   });
-
-  return promptBody.replace(
-    '用户调用命令参数：$ARGUMENTS',
-    `用户通过 \`${options.entryLabel}\` 主动调用本 skill。用户当前消息就是本次任务的补充上下文。`
-  );
 }
 
 /**
@@ -211,17 +207,38 @@ export function buildCodexCommandSkillBody(options) {
  * @param {object} options.command 命令定义
  * @returns {string}
  */
+const PROMPT_BODY_BUILDERS = {
+  api: buildApiPromptBody,
+  archive: buildArchivePromptBody,
+  design: buildDesignPromptBody,
+  init: buildInitPromptBody,
+  requirement: buildRequirementPromptBody,
+  review: buildReviewPromptBody,
+  session: buildSessionPromptBody,
+  update: buildUpdatePromptBody
+};
+
+/**
+ * 生成命令参数说明
+ * @param {object} options 生成参数
+ * @param {string} [options.codexUserSkillLabel] Codex user skill 入口
+ * @returns {string}
+ */
+function buildCommandArgumentLine(options) {
+  if (options.codexUserSkillLabel)
+    return `用户通过 \`${options.codexUserSkillLabel}\` 主动调用本 skill。用户当前消息就是本次任务的补充上下文。`;
+
+  return '用户调用命令参数：$ARGUMENTS';
+}
+
 function buildPromptBody(options) {
   const { command } = options;
+  const builder = PROMPT_BODY_BUILDERS[command.key];
 
-  if (command.key === 'init') return buildInitPromptBody(options);
-  if (command.key === 'api') return buildApiPromptBody(options);
-  if (command.key === 'requirement') return buildRequirementPromptBody(options);
-  if (command.key === 'design') return buildDesignPromptBody(options);
-  if (command.key === 'archive') return buildArchivePromptBody(options);
-  if (command.key === 'update') return buildUpdatePromptBody(options);
-  if (command.key === 'review') return buildReviewPromptBody(options);
-  return buildSessionPromptBody(options);
+  if (!builder)
+    throw new Error(`不支持的命令模板: ${command.key}`);
+
+  return builder(options);
 }
 
 /**
@@ -236,6 +253,7 @@ function buildPromptBody(options) {
 function buildInitPromptBody(options) {
   const { commandGuide, referenceDir, command } = options;
   const heading = getPromptHeading(options.surfaceType, command);
+  const argumentLine = buildCommandArgumentLine(options);
   const skillEntryPath = getReferencePath(referenceDir, 'SKILL.md');
   const projectAgentsPath = getReferencePath(referenceDir, 'template', 'AGENTS.md');
   const projectClaudePath = getReferencePath(referenceDir, 'template', 'CLAUDE.md');
@@ -253,7 +271,7 @@ function buildInitPromptBody(options) {
 
   return `# ${heading}
 
-用户调用命令参数：$ARGUMENTS
+${argumentLine}
 
 ## 执行要求
 
@@ -322,6 +340,7 @@ ${command.example}
 function buildApiPromptBody(options) {
   const { commandGuide, referenceDir, command } = options;
   const heading = getPromptHeading(options.surfaceType, command);
+  const argumentLine = buildCommandArgumentLine(options);
   const skillEntryPath = getReferencePath(referenceDir, 'SKILL.md');
   const apiPath = getReferencePath(referenceDir, 'api.md');
   const commentPath = getReferencePath(referenceDir, 'comment.md');
@@ -332,7 +351,7 @@ function buildApiPromptBody(options) {
 
   return `# ${heading}
 
-用户调用命令参数：$ARGUMENTS
+${argumentLine}
 
 ## 执行要求
 
@@ -381,12 +400,13 @@ ${command.example}
 function buildRequirementPromptBody(options) {
   const { commandGuide, referenceDir, command } = options;
   const heading = getPromptHeading(options.surfaceType, command);
+  const argumentLine = buildCommandArgumentLine(options);
   const skillEntryPath = getReferencePath(referenceDir, 'SKILL.md');
   const readmePath = getReferencePath(referenceDir, 'README.md');
 
   return `# ${heading}
 
-用户调用命令参数：$ARGUMENTS
+${argumentLine}
 
 ## 执行要求
 
@@ -429,12 +449,13 @@ ${command.example}
 function buildDesignPromptBody(options) {
   const { commandGuide, referenceDir, command } = options;
   const heading = getPromptHeading(options.surfaceType, command);
+  const argumentLine = buildCommandArgumentLine(options);
   const skillEntryPath = getReferencePath(referenceDir, 'SKILL.md');
   const readmePath = getReferencePath(referenceDir, 'README.md');
 
   return `# ${heading}
 
-用户调用命令参数：$ARGUMENTS
+${argumentLine}
 
 ## 执行要求
 
@@ -479,6 +500,7 @@ ${command.example}
 function buildUpdatePromptBody(options) {
   const { commandGuide, referenceDir, command } = options;
   const heading = getPromptHeading(options.surfaceType, command);
+  const argumentLine = buildCommandArgumentLine(options);
   const skillEntryPath = getReferencePath(referenceDir, 'SKILL.md');
   const projectAgentsPath = getReferencePath(referenceDir, 'template', 'AGENTS.md');
   const apiPath = getReferencePath(referenceDir, 'api.md');
@@ -495,7 +517,7 @@ function buildUpdatePromptBody(options) {
 
   return `# ${heading}
 
-用户调用命令参数：$ARGUMENTS
+${argumentLine}
 
 ## 执行要求
 
@@ -555,6 +577,7 @@ ${command.example}
 function buildReviewPromptBody(options) {
   const { commandGuide, referenceDir, command } = options;
   const heading = getPromptHeading(options.surfaceType, command);
+  const argumentLine = buildCommandArgumentLine(options);
   const skillEntryPath = getReferencePath(referenceDir, 'SKILL.md');
   const commentPath = getReferencePath(referenceDir, 'comment.md');
   const namingPath = getReferencePath(referenceDir, 'naming.md');
@@ -567,7 +590,7 @@ function buildReviewPromptBody(options) {
 
   return `# ${heading}
 
-用户调用命令参数：$ARGUMENTS
+${argumentLine}
 
 ## 执行要求
 
@@ -614,12 +637,13 @@ ${command.example}
 function buildArchivePromptBody(options) {
   const { commandGuide, referenceDir, command } = options;
   const heading = getPromptHeading(options.surfaceType, command);
+  const argumentLine = buildCommandArgumentLine(options);
   const skillEntryPath = getReferencePath(referenceDir, 'SKILL.md');
   const readmePath = getReferencePath(referenceDir, 'README.md');
 
   return `# ${heading}
 
-用户调用命令参数：$ARGUMENTS
+${argumentLine}
 
 ## 执行要求
 
@@ -683,18 +707,19 @@ ${command.example}
 function buildSessionPromptBody(options) {
   const { commandGuide, referenceDir, command } = options;
   const heading = getPromptHeading(options.surfaceType, command);
+  const argumentLine = buildCommandArgumentLine(options);
   const skillEntryPath = getReferencePath(referenceDir, 'SKILL.md');
 
   return `# ${heading}
 
-用户调用命令参数：$ARGUMENTS
+${argumentLine}
 
 ## 执行要求
 
 1. 这个命令是显式触发命令，只有用户主动调用 \`${command.slashCommand}\` 时才生效
-2. 先从当前会话中提取已经确认的信息，再输出到当前项目 \`.agents/archive/sessions/\` 目录
+2. 先从当前会话中提取已经确认的信息，再输出到当前项目 \`.agent/archive/sessions/\` 目录
 3. 只归档当前会话可见信息，不补写未确认的需求、接口、代码细节或结论
-4. 如果 \`.agents/\` 不存在，只创建 \`.agents/archive/sessions/\`，不要初始化其它规则文件
+4. 如果 \`.agent/\` 不存在，只创建 \`.agent/archive/sessions/\`，不要初始化其它规则文件
 5. 默认新建 Markdown 文档；如果目标文件已存在，追加 \`-2\`、\`-3\` 等序号后缀，不要覆盖
 6. 文档至少包含：会话主题、背景与目标、已确认信息、决策与约束、涉及文件或模块、待确认事项、后续动作
 7. 归档正文尽量使用 Markdown 表格：背景与目标、已确认信息、决策与约束、涉及文件或模块、待确认事项、后续动作优先用表格呈现；信息不足时保留对应部分并标注“暂无”或“待确认”

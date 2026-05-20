@@ -24,6 +24,7 @@
     "scripts",
     "src",
     "skills",
+    "AGENTS.md",
     "README.md"
   ],
   "engines": {

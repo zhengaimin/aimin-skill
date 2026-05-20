@@ -1,4 +1,4 @@
-<!-- aimin-skill-version: 0.1.3 -->
+<!-- aimin-skill-version: 0.1.4 -->
 
 # aimin-skill 规则总览
 
@@ -12,9 +12,9 @@
 - 根据产品 prompt 在 `.agent/ui/{feature-name}/` 下生成需求文档包
 - 根据 `.agent/ui/{feature-name}/` 需求文档生成 Pencil UI 设计稿
 - 按 Aimin 与阿里风格 review 当前代码，输出问题、优化建议与可改动点
-- 将关键功能点、页面和当前会话整理为中文表格文档，归档到 `.agents/archive/`
+- 将关键功能点、页面和当前会话整理为中文表格文档，归档到 `.agent/archive/`
 - 同步维护目标项目 `AGENTS.md` 的项目级规则表，记录修改范围和对应归档文档
-- 将客户、后台、产品方提供的原始资料保留在 `.agents/docs/`
+- 将客户、后台、产品方提供的原始资料保留在 `.agent/docs/`
 - 根据项目类型从 `template/admin`、`template/tauri`、`template/uni` 加载补充模板
 
 ## 项目约束
@@ -59,8 +59,8 @@
 | `/am:api`  | 新增接口、类型与枚举                                |
 | `/am:requirement` | 根据产品 prompt 生成 `.agent/ui/{feature-name}/` 需求文档包 |
 | `/am:design` | 根据 `.agent/ui/{feature-name}/` 需求文档生成 Pencil UI 设计稿 |
-| `/am:archive` | 将关键功能点、页面和模块归档到 `.agents/archive/`，并同步维护项目 `AGENTS.md` 的项目级规则表 |
-| `/am:session` | 提取当前会话信息，并输出到 `.agents/archive/sessions/` |
+| `/am:archive` | 将关键功能点、页面和模块归档到 `.agent/archive/`，并同步维护项目 `AGENTS.md` 的项目级规则表 |
+| `/am:session` | 提取当前会话信息，并输出到 `.agent/archive/sessions/` |
 | `/am:review` | 按 Aimin 与阿里风格 review 当前代码，输出问题与优化建议 |
 | `/am:update` | 按版本升级 `.agent/**`，并只更新 `AGENTS.md` 的 `# Aimin-skill` 段落 |
 
@@ -70,4 +70,4 @@
 
 | 修改范围 | 对应归档文档 | 读取要求 | 备注 |
 | ---- | ---- | ---- | ---- |
-| 订单详情页 | `.agents/archive/pages/order-detail.md` | 修改前必读 | 先读文档和 prompt 再改代码 |
+| 订单详情页 | `.agent/archive/order-detail.md` | 修改前必读 | 先读文档和 prompt 再改代码 |

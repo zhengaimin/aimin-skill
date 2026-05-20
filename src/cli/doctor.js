@@ -5,7 +5,7 @@
 
 import path from 'node:path';
 import { CODEX_USER_SKILL_DEFINITIONS, COMMAND_DEFINITIONS, MANIFEST_FILE_NAME, MARKETPLACE_NAME, PLUGIN_NAME } from './constants.js';
-import { buildInstallContext } from './install/index.js';
+import { buildInstallPathContext } from './install/index.js';
 import { isManagedContent } from './templates.js';
 import { pathExists, readJsonIfExists, readTextIfExists } from './utils.js';
 
@@ -17,11 +17,12 @@ import { pathExists, readJsonIfExists, readTextIfExists } from './utils.js';
  * @returns {Promise<object>}
  */
 export async function createDoctorReport(options) {
-  const context = await buildInstallContext(options);
+  const context = await buildInstallPathContext(options);
+  const manifest = await readJsonIfExists(context.manifestPath);
   const tools = [];
 
   for (const toolPlan of context.toolPlans)
-    tools.push(await createToolReport(context, toolPlan));
+    tools.push(await createToolReport(context, toolPlan, manifest));
 
   return {
     commandSourceDir: path.join(options.repoRoot, 'commands'),
@@ -37,10 +38,10 @@ export async function createDoctorReport(options) {
  * 生成单个工具的诊断结果
  * @param {object} context 安装上下文
  * @param {object} toolPlan 工具安装计划
+ * @param {object | null} manifest 受管 manifest
  * @returns {Promise<object>}
  */
-async function createToolReport(context, toolPlan) {
-  const manifest = await readJsonIfExists(context.manifestPath);
+async function createToolReport(context, toolPlan, manifest) {
   const manifestManaged = manifest?.managedBy === 'aimin-skill';
   const marketplaceRootExists = await pathExists(context.marketplaceRoot);
   const pluginRootExists = await pathExists(context.pluginRoot);

@@ -7,11 +7,13 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const errors = [];
 const RULE_VERSION = '0.1.0';
 const MARKDOWN_VERSION_MARKER = `<!-- aimin-skill-version: ${RULE_VERSION} -->`;
-const GUIDE_RULE_VERSION = '0.1.3';
+const GUIDE_RULE_VERSION = '0.1.4';
 const GUIDE_RULE_VERSION_MARKER = `<!-- aimin-skill-version: ${GUIDE_RULE_VERSION} -->`;
 const CORE_RULE_VERSION = '0.1.1';
 const CORE_RULE_VERSION_MARKER = `<!-- aimin-skill-version: ${CORE_RULE_VERSION} -->`;
-const AGENTS_TEMPLATE_VERSION = '0.1.3';
+const ADMIN_TABLE_VERSION = '0.1.1';
+const ADMIN_TABLE_VERSION_MARKER = `<!-- aimin-skill-version: ${ADMIN_TABLE_VERSION} -->`;
+const AGENTS_TEMPLATE_VERSION = '0.1.4';
 const AGENTS_TEMPLATE_VERSION_MARKER = `<!-- aimin-skill-version: ${AGENTS_TEMPLATE_VERSION} -->`;
 
 await validateCommandGuides();
@@ -128,8 +130,8 @@ async function validateCommandGuides() {
 
   const sessionContent = await readText(path.join(repoRoot, 'commands', 'session.md'));
   assertIncludes(sessionContent, '/am:session', 'session 命令说明缺少 /am:session');
-  assertIncludes(sessionContent, '.agents/archive/sessions/', 'session 命令说明缺少 archive 会话输出目录');
-  assertIncludes(sessionContent, '.agents/archive/README.md', 'session 命令说明缺少 archive 索引要求');
+  assertIncludes(sessionContent, '.agent/archive/sessions/', 'session 命令说明缺少 archive 会话输出目录');
+  assertIncludes(sessionContent, '.agent/archive/README.md', 'session 命令说明缺少 archive 索引要求');
   assertIncludes(sessionContent, '当前会话', 'session 命令说明缺少当前会话来源');
   assertIncludes(sessionContent, '不要覆盖', 'session 命令说明缺少防覆盖要求');
   assertIncludes(sessionContent, '不要修改 `AGENTS.md`', 'session 命令说明缺少边界要求');
@@ -158,6 +160,7 @@ async function validateProjectTemplates() {
     assertIncludes(content, '### 项目级别规则', '渐进式模板缺少项目级别规则章节');
     assertIncludes(content, '修改范围 | 对应归档文档 | 读取要求 | 备注', '渐进式模板缺少项目级规则表');
     assertIncludes(content, '修改某个功能点、页面或模块前', '渐进式模板缺少归档预读要求');
+    assertIncludes(content, '.agent/archive/**', '渐进式模板缺少 .agent/archive 归档路径');
   }
 
   assertIncludes(skillEntryContent, GUIDE_RULE_VERSION_MARKER, 'skill 入口缺少版本号');
@@ -219,6 +222,9 @@ function getMarkdownVersionMarker(relativePath) {
 
   if (relativePath === 'skills/template/AGENTS.md')
     return AGENTS_TEMPLATE_VERSION_MARKER;
+
+  if (relativePath === 'skills/template/admin/table.md')
+    return ADMIN_TABLE_VERSION_MARKER;
 
   if (['skills/api.md', 'skills/comment.md', 'skills/constant.md', 'skills/naming.md'].includes(relativePath))
     return CORE_RULE_VERSION_MARKER;
