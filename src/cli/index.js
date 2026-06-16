@@ -15,13 +15,14 @@ import { readPackageMeta } from './utils.js';
  * @param {string[]} options.argv 命令参数
  * @param {string} options.cwd 当前目录
  * @param {NodeJS.ProcessEnv} options.env 环境变量
+ * @param {NodeJS.Platform} options.platform 运行平台
  * @param {{ write: (chunk: string) => boolean }} options.stdout 标准输出
  * @param {{ write: (chunk: string) => boolean }} options.stderr 标准错误
  * @param {string} options.repoRoot 仓库根目录
  * @returns {Promise<number>}
  */
 export async function runCli(options) {
-  const { argv, cwd, stdout, stderr, repoRoot } = options;
+  const { argv, cwd, env = process.env, platform = process.platform, stdout, stderr, repoRoot } = options;
 
   try {
     const packageMeta = await readPackageMeta(repoRoot);
@@ -38,7 +39,7 @@ export async function runCli(options) {
     }
 
     if (command === 'init')
-      return runInitCommand({ argv: argv.slice(1), cwd, repoRoot, stdout });
+      return runInitCommand({ argv: argv.slice(1), cwd, env, platform, repoRoot, stdout });
 
     if (command === 'doctor')
       return runDoctorCommand({ argv: argv.slice(1), cwd, repoRoot, stdout });
@@ -58,6 +59,8 @@ export async function runCli(options) {
  * @param {object} options 执行参数
  * @param {string[]} options.argv 命令参数
  * @param {string} options.cwd 当前目录
+ * @param {NodeJS.ProcessEnv} options.env 环境变量
+ * @param {NodeJS.Platform} options.platform 运行平台
  * @param {string} options.repoRoot 仓库根目录
  * @param {{ write: (chunk: string) => boolean }} options.stdout 标准输出
  * @returns {Promise<number>}
@@ -67,7 +70,7 @@ async function runInitCommand(options) {
   const result = await initUserInstall({
     env: options.env,
     homeDir: parsed.homeDir,
-    platform: process.platform,
+    platform: options.platform,
     repoRoot: options.repoRoot,
     force: parsed.force
   });

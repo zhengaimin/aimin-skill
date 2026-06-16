@@ -124,30 +124,6 @@ async function collectRelativeFiles(rootDir, currentDir, relativeFiles) {
 }
 
 /**
- * 删除空父目录直到指定根目录
- * @param {string} startDir 起始目录
- * @param {string} stopDir 停止目录
- * @returns {Promise<void>}
- */
-export async function removeEmptyParentDirs(startDir, stopDir) {
-  let currentDir = startDir;
-  const normalizedStopDir = path.resolve(stopDir);
-
-  while (path.resolve(currentDir).startsWith(normalizedStopDir)) {
-    if (path.resolve(currentDir) === normalizedStopDir) return;
-
-    try {
-      const children = await fs.readdir(currentDir);
-      if (children.length > 0) return;
-      await fs.rmdir(currentDir);
-      currentDir = path.dirname(currentDir);
-    } catch {
-      return;
-    }
-  }
-}
-
-/**
  * 读取包元信息
  * @param {string} repoRoot 仓库根目录
  * @returns {Promise<{ name: string; version: string }>}

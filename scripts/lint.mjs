@@ -13,7 +13,7 @@ const CORE_RULE_VERSION = '0.1.1';
 const CORE_RULE_VERSION_MARKER = `<!-- aimin-skill-version: ${CORE_RULE_VERSION} -->`;
 const ADMIN_TABLE_VERSION = '0.1.1';
 const ADMIN_TABLE_VERSION_MARKER = `<!-- aimin-skill-version: ${ADMIN_TABLE_VERSION} -->`;
-const AGENTS_TEMPLATE_VERSION = '0.1.4';
+const AGENTS_TEMPLATE_VERSION = '0.1.6';
 const AGENTS_TEMPLATE_VERSION_MARKER = `<!-- aimin-skill-version: ${AGENTS_TEMPLATE_VERSION} -->`;
 
 await validateCommandGuides();
@@ -155,6 +155,10 @@ async function validateProjectTemplates() {
     assertIncludes(content, '.agent/scripts/lint.md', '渐进式模板缺少 lint 路由');
     assertIncludes(content, '按 `.agent/scripts/lint.md` 对本次修改文件执行 lint', '渐进式模板缺少改动文件 lint 要求');
     assertIncludes(content, '### 代码注释', '渐进式模板缺少代码注释章节');
+    assertIncludes(content, '### 逻辑封装与抽象原则', '渐进式模板缺少逻辑封装与抽象原则章节');
+    assertIncludes(content, '严禁为了拆分而拆分', '渐进式模板缺少反对碎片化要求');
+    assertIncludes(content, '微型私有方法', '渐进式模板缺少拒绝过度设计要求');
+    assertIncludes(content, '一眼看到底', '渐进式模板缺少可读性优先要求');
     assertIncludes(content, '新增或修改代码时，同步检查注释是否需要补充、调整或删除', '渐进式模板缺少注释检查要求');
     assertIncludes(content, '具体范围、格式和边界以 `.agent/comment.md` 为准', '渐进式模板缺少 comment 规则引用');
     assertIncludes(content, '### 项目级别规则', '渐进式模板缺少项目级别规则章节');

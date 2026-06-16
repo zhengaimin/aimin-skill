@@ -126,16 +126,23 @@ export async function initUserInstall(options) {
 
   const results = [];
   for (const toolPlan of context.toolPlans) {
-    results.push(await registerPlatformTool({
-      env,
-      helpers: {
-        readJsonIfExists,
-        readTextIfExists,
-        runToolCommand
-      },
-      homeDir: options.homeDir,
-      toolPlan
-    }));
+    try {
+      results.push(await registerPlatformTool({
+        env,
+        helpers: {
+          readJsonIfExists,
+          readTextIfExists,
+          runToolCommand: (command, args, commandOptions) => runToolCommand(command, args, {
+            ...commandOptions,
+            platform
+          })
+        },
+        homeDir: options.homeDir,
+        toolPlan
+      }));
+    } catch (error) {
+      results.push(createToolFailureResult(toolPlan, error));
+    }
   }
 
   await writeManagedManifest({
@@ -152,6 +159,46 @@ export async function initUserInstall(options) {
     pluginRoot: context.pluginRoot,
     results
   };
+}
+
+/**
+ * 创建单工具注册失败结果
+ * @param {object} toolPlan 工具安装计划
+ * @param {unknown} error 注册错误
+ * @returns {object}
+ */
+function createToolFailureResult(toolPlan, error) {
+  const missing = isToolMissingError(error);
+  const status = missing ? 'missing' : 'failed';
+
+  return {
+    tool: toolPlan.tool,
+    marketplaceStatus: status,
+    marketplaceSource: toolPlan.marketplaceSource,
+    pluginStatus: status,
+    userSkillStatus: toolPlan.tool.key === 'codex' ? 'ready' : null,
+    status,
+    error: getErrorMessage(error)
+  };
+}
+
+/**
+ * 判断外部工具是否缺失
+ * @param {unknown} error 注册错误
+ * @returns {boolean}
+ */
+function isToolMissingError(error) {
+  return error instanceof Error && /ENOENT|not found|command not found|不存在|未找到/i.test(error.message);
+}
+
+/**
+ * 提取错误消息
+ * @param {unknown} error 错误对象
+ * @returns {string}
+ */
+function getErrorMessage(error) {
+  if (error instanceof Error) return error.message;
+  return String(error);
 }
 
 /**
@@ -449,16 +496,17 @@ const DEBUGGER_ENV_KEYS = [
  * 避免调试器注入污染 Claude / Codex CLI
  * @param {NodeJS.ProcessEnv} env 原始环境变量
  * @param {string} homeDir 用户目录
+ * @param {NodeJS.Platform} platform 运行平台
  * @returns {NodeJS.ProcessEnv}
  */
-function buildToolCommandEnv(env, homeDir) {
+function buildToolCommandEnv(env, homeDir, platform) {
   const childEnv = {
     ...env,
     CODEX_HOME: path.join(homeDir, '.codex'),
     HOME: homeDir
   };
 
-  if (process.platform === 'win32') {
+  if (platform === 'win32') {
     const parsedHome = path.parse(homeDir);
     childEnv.USERPROFILE = homeDir;
     childEnv.HOMEDRIVE = parsedHome.root.replace(/[\\/]$/, '');
@@ -480,15 +528,16 @@ function buildToolCommandEnv(env, homeDir) {
  * @param {object} options 执行参数
  * @param {NodeJS.ProcessEnv} options.env 环境变量
  * @param {string} options.homeDir 用户目录
+ * @param {NodeJS.Platform} options.platform 运行平台
  * @returns {Promise<void>}
  */
 async function runToolCommand(command, args, options) {
   await new Promise((resolve, reject) => {
-    const commandPath = resolveToolCommandPath(command, options.env);
+    const commandPath = resolveToolCommandPath(command, options.env, options.platform);
     const child = spawn(commandPath, args, {
       cwd: options.homeDir,
-      env: buildToolCommandEnv(options.env, options.homeDir),
-      shell: shouldUseShellForCommand(command, commandPath),
+      env: buildToolCommandEnv(options.env, options.homeDir, options.platform),
+      shell: shouldUseShellForCommand(command, commandPath, options.platform),
       stdio: 'pipe'
     });
 
@@ -523,10 +572,11 @@ async function runToolCommand(command, args, options) {
  * 解析外部工具命令路径
  * @param {string} command 命令名
  * @param {NodeJS.ProcessEnv} env 环境变量
+ * @param {NodeJS.Platform} platform 运行平台
  * @returns {string}
  */
-function resolveToolCommandPath(command, env) {
-  if (process.platform !== 'win32' || path.isAbsolute(command) || path.extname(command))
+function resolveToolCommandPath(command, env, platform) {
+  if (platform !== 'win32' || path.isAbsolute(command) || path.extname(command))
     return command;
 
   const pathKey = Object.keys(env).find(key => key.toLowerCase() === 'path');
@@ -560,8 +610,9 @@ function getWindowsPathExtensions(env) {
  * 判断命令是否需要 shell 执行
  * @param {string} command 原始命令名
  * @param {string} commandPath 命令路径
+ * @param {NodeJS.Platform} platform 运行平台
  * @returns {boolean}
  */
-function shouldUseShellForCommand(command, commandPath) {
-  return process.platform === 'win32' && (command === commandPath || /\.(?:bat|cmd)$/i.test(commandPath));
+function shouldUseShellForCommand(command, commandPath, platform) {
+  return platform === 'win32' && (command === commandPath || /\.(?:bat|cmd)$/i.test(commandPath));
 }
